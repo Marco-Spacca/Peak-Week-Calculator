@@ -28,7 +28,7 @@ button.ghost{background:#333;color:#eee;font-weight:400;padding:5px 9px;font-siz
 select,input[type=number]{background:#0d0f1a;color:#eee;border:1px solid #555;border-radius:8px;padding:6px;font-size:14px}
 select.inv,input.inv{border:none;background:transparent;color:inherit;font:inherit;font-weight:700;padding:2px;max-width:160px}
 select.inv:focus,input.inv:focus{border:1px solid var(--gold);background:#0d0f1a;border-radius:8px}
-input.inv{width:60px}input.txt{width:100%;margin:4px 0;padding:8px}select.inv{min-width:170px}.food small{display:block;margin-top:3px;color:#8fa3c8}.food:not(:last-child){border-bottom:1px solid #2c3050;padding-bottom:10px}
+input.inv{width:60px}input.txt{width:100%;margin:4px 0;padding:8px}select.inv{min-width:170px}.food small{display:block;margin-top:3px;color:#8fa3c8}.food:not(:last-child){border-bottom:1px solid #2c3050;padding-bottom:10px}@keyframes saltgrain{to{background-position:20px 0}}
 label{display:block;margin:6px 0;font-size:15px}
 details{margin:6px 0;border:1px solid #444;border-radius:8px;padding:6px}
 summary{cursor:pointer;font-weight:700}
@@ -113,7 +113,7 @@ mgio:{n:"Magnesio IO.Genix",unit:"cpr",C:0,P:0,F:0,Na:0,K:0,Mg:103.5,H:0,g:"supM
 };
 const COOK={crudo:["Crudo/a",1,1],sciacquato:["Sciacquato",1,1],pentola:["Pentola (assorbe)",.9,1],vapore:["Vapore",.95,.95],padella:["Padella coperchio",.9,.85],piastra:["Piastra",.9,.8],forno:["Forno",.9,.85],microonde:["Microonde",.95,.95]};
 const MAX={riso:150,polenta:150,quinoa:150,gnocchi:300,patate:500,patDolci:500,zucca:400,galRiso:100,galMais:100,konjac:400,ceci:250,merluzzo:400,sogliola:400,platessa:400,nasello:400,persico:400,orata:400,spada:400,tonnoF:300,salmone:300,sgombro:250,gamberi:350,cozze:400,calamari:350,albume:400,uovo:200,skyr:300,greco:300,quark:300,fiocchi:250,ricotta:250,grana:60,olio:20,cocco:10,mandorle:60,noci:60,pistacchi:40,semiZucca:20,avocado:200,ciocc:25,budino:200,misura:60,banana:300,fragole:200,mirtilli:200,spinaci:400,zucchine:400,asparagi:300,bieta:300,broccoli:400,funghi:300,lattuga:200,cappuccio:250,carote:250,barba:200,rucola:200,salsaYo:100,senape:15,sale:10,miele:30,whey:60,kio:3,mgio:3};
-const VERSION="1.6.0";
+const VERSION="1.6.1";
 const sc=v=>Math.round(v*10)/10;
 const FOODCLS={};["merluzzo","sogliola","platessa","nasello","persico","orata","spada","tonnoF","salmone","sgombro","gamberi","cozze","calamari","albume","skyr","greco","quark","fiocchi","ricotta","whey","budino"].forEach(k=>FOODCLS[k]="P");
 ["olio","cocco","mandorle","noci","pistacchi","semiZucca","avocado","ciocc","grana","uovo"].forEach(k=>FOODCLS[k]="F");
@@ -309,10 +309,10 @@ function mealTotals(m){let t={C:0,P:0,F:0,Na:0,K:0,Mg:0,H:0,kc:0};
 function mealSale(m){let foodNa=0;m.items.forEach(([f,q,c])=>{if(f!=="sale")foodNa+=vals(f,q,c).Na});
  foodNa=Math.round(foodNa);const target=m.naTarget||m.baseNa||foodNa;let g=(m.saltG!=null)?m.saltG:Math.round(Math.max(0,(target-foodNa)/387)*2)/2;
  return{g,foodNa,totalNa:Math.round(foodNa+g*387),target}}
-function saltRow(m){if(m.items.some(it=>it[0]==="sale"))return "";
- const s=mealSale(m);
- const txt=s.g>0?`🧂 Sale aggiunto · ${s.g}g · auto (Na ${s.totalNa}mg / target ${s.target}mg)`:`🧂 Sale 0g · sodio cibo già oltre target (${s.foodNa}mg)`;
- return `<div class="food"><div class="row1" style="display:flex;justify-content:space-between;gap:6px"><span>${txt}</span></div></div>`}
+function saltRow(m,mi){if(m.items.some(it=>it[0]==="sale"))return "";
+ const s=mealSale(m);if(!(s.g>0))return "";
+ const added=smOf(mi),pct=s.g>0?Math.min(100,Math.round(added/s.g*100)):0;
+ return `<div class="sbar" data-sbar="${mi}" style="position:relative;background:#222;border:1px solid #ffd60a;border-radius:10px;overflow:hidden;margin:5px 0"><div data-sfill="${mi}" style="height:34px;width:${pct}%;background:repeating-linear-gradient(45deg,#ffd60a 0 5px,#8a6d00 5px 10px);background-size:14px 14px;animation:saltgrain 1s linear infinite;transition:width .5s"></div><button class="ghost" data-sm="${mi},-0.5" style="position:absolute;left:4px;top:4px;opacity:.25">-</button><div data-stxt="${mi}" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;pointer-events:none">Sale da aggiungere ${s.g}g / aggiunto ${added}g</div><button class="ghost" data-sm="${mi},0.5" style="position:absolute;right:4px;top:4px;opacity:.25">+</button></div>}
 function autoSupp(m){if(m.baseK==null)return;
  m.items=m.items.filter(it=>it[0]!=="kio"&&it[0]!=="mgio");
  let K=0,Mg=0;m.items.forEach(([f,q,c])=>{const v=vals(f,q,c);K+=v.K;Mg+=v.Mg});
@@ -366,7 +366,7 @@ function tab(el){document.querySelectorAll('.tab').forEach(t=>t.classList.remove
   else if(hasS)hint=" ✓ K/Mg integrati nel pasto";
   else hint=" ✓ K/Mg dal cibo ok";
   return `<div class="meal" data-meal="${mi}"><div class="mealhead"><b>${m.n}</b><span class="kcal">${v.kc} kcal · <span class="mac">🌾${v.C}g 💪${v.P}g 🫒${v.F}g</span></span><button class="ghost" data-reset="${mi}">reset</button></div>
-  ${saltRow(m)}
+  ${saltRow(m,mi)}
   <div class="wbar" data-wbar="${mi}" style="position:relative;background:#222;border:1px solid #4da3ff;border-radius:10px;overflow:hidden;margin:5px 0"><div data-wfill="${mi}" style="height:34px;width:${m.water>0?Math.round((+read('wm_'+cur.iso+'_'+mi)||0)/m.water*100):0}%;background:#4da3ff;transition:width .5s"></div><button class="ghost" data-wm="${mi},-50" style="position:absolute;left:4px;top:4px;opacity:.25">-</button><div data-wtxt="${mi}" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;pointer-events:none">Acqua da bere ${m.water}ml / bevuta ${+read('wm_'+cur.iso+'_'+mi)||0}ml</div><button class="ghost" data-wm="${mi},50" style="position:absolute;right:4px;top:4px;opacity:.25">+</button></div>
   <div class="food"><div class="row1"><span>${m.supp}</span></div></div>
   <div class="supp">${hint}</div>`+
@@ -384,7 +384,7 @@ function tab(el){document.querySelectorAll('.tab').forEach(t=>t.classList.remove
  if(name==="Acqua"){const drunk=drunkDay(),bev=t.w;
   pane.innerHTML=`<b>Acqua bevuta ${drunk}ml / ${bev}ml</b><br>
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-width:440px;margin:8px 0"><button style="background:#4da3ff" onclick="addW(50)">+50</button><button style="background:#4da3ff" onclick="addW(100)">+100</button><button style="background:#4da3ff" onclick="addW(200)">+200</button><button style="background:#4da3ff" onclick="addW(500)">+500</button><button onclick="addW(-50)">-50</button><button onclick="addW(-100)">-100</button><button onclick="addW(-200)">-200</button><button onclick="addW(-500)">-500</button></div>`}
-if(name==="Idratazione"){const o=getObj(),drunk2=drunkDay();let foodNa=0,nK=0,nMg=0;cur.meals.forEach(m=>m.items.forEach(([f,q,c])=>{const v=vals(f,q,c);if(f==="kio")nK+=q;else if(f==="mgio")nMg+=q;else if(f!=="sale")foodNa+=v.Na}));foodNa=Math.round(foodNa);const kFood=Math.round(t.K-nK*333),mgFood=Math.round(t.Mg-nMg*103.5),isShow=ds==="2026-11-22",isSpike=ds==="2026-11-21",saleTgt=isShow?0:isSpike?2.75:o.sale,saltAdd=isShow?"tattico":sc(Math.max(0,(saleTgt*400-foodNa)/387))+"g",ratio=t.Na>0?"1:"+(t.K/t.Na).toFixed(2):"-",rNaK=t.Na>0?t.K/t.Na:0,rSW=(t.H+t.w)>0?t.Na/400/((t.H+t.w)/1000):0,rKMg=t.Mg>0?t.K/t.Mg:0,rc=(v,a,b,c,d)=>v>=a&&v<=b?"#2ecc71":v>=c&&v<=d?"#ffd60a":"#ff4d6d";pane.innerHTML=`<h3 style="margin:6px 0">Rapporto di idratazione</h3><table class="grid" style="font-size:17px;border-collapse:separate;border-spacing:3px"><tr><td></td><td><b>Target</b></td><td><b>Dal cibo</b></td><td><b>Integrazione</b></td></tr><tr><td>Acqua</td><td>${isShow?"sorsi":(isSpike?2250:o.water*1000)+"ml"}</td><td>${t.H}ml</td><td>bere ${t.w} - bevuti ${drunk2} - mancano <b>${Math.max(0,Math.round(t.w-drunk2))}</b></td></tr><tr><td>Sale</td><td>${isShow?"tattico":saleTgt+"g"}</td><td>${sc(foodNa/400)}g</td><td>aggiungere <b>${saltAdd}</b></td></tr><tr><td>Potassio</td><td>3500-4500mg</td><td>${kFood}mg</td><td>${nK?nK+"cpr (+"+Math.round(nK*333)+"mg)":"-"}</td></tr><tr><td>Magnesio</td><td>350-400mg</td><td>${mgFood}mg</td><td>${nMg?nMg+"cpr (+"+Math.round(nMg*103.5)+"mg)":"-"}</td></tr></table><br><table class="grid" style="font-size:15px;border-collapse:separate;border-spacing:2px"><tr><td><b>Ideali</b></td><td><b>Tuoi oggi</b></td></tr><tr><td>Na:K 1:1.5</td><td style="color:${rc(rNaK,1.28,1.73,1.05,1.95)};padding:2px 10px;border-radius:6px">1:${rNaK.toFixed(2)}</td></tr><tr><td>Sale:acqua 1.5g/L</td><td style="color:${rc(rSW,1.28,1.73,1.05,1.95)};padding:2px 10px;border-radius:6px">${rSW.toFixed(2)}g/L</td></tr><tr><td>K:Mg 8:1</td><td style="color:${rc(rKMg,6.8,9.2,5.6,11.2)};padding:2px 10px;border-radius:6px">${rKMg.toFixed(1)}:1</td></tr></table>`}
+if(name==="Idratazione"){const o=getObj(),drunk2=drunkDay();let foodNa=0,nK=0,nMg=0;cur.meals.forEach(m=>m.items.forEach(([f,q,c])=>{const v=vals(f,q,c);if(f==="kio")nK+=q;else if(f==="mgio")nMg+=q;else if(f!=="sale")foodNa+=v.Na}));foodNa=Math.round(foodNa);const kFood=Math.round(t.K-nK*333),mgFood=Math.round(t.Mg-nMg*103.5),isShow=ds==="2026-11-22",isSpike=ds==="2026-11-21",saleTgt=isShow?0:isSpike?2.75:o.sale,saltAdd=isShow?"tattico":sc(Math.max(0,(saleTgt*400-foodNa)/387-smDay()))+"g",ratio=t.Na>0?"1:"+(t.K/t.Na).toFixed(2):"-",rNaK=t.Na>0?t.K/t.Na:0,rSW=(t.H+t.w)>0?t.Na/400/((t.H+t.w)/1000):0,rKMg=t.Mg>0?t.K/t.Mg:0,rc=(v,a,b,c,d)=>v>=a&&v<=b?"#2ecc71":v>=c&&v<=d?"#ffd60a":"#ff4d6d";pane.innerHTML=`<h3 style="margin:6px 0">Rapporto di idratazione</h3><table class="grid" style="font-size:17px;border-collapse:separate;border-spacing:3px"><tr><td></td><td><b>Target</b></td><td><b>Dal cibo</b></td><td><b>Integrazione</b></td></tr><tr><td>Acqua</td><td>${isShow?"sorsi":(isSpike?2250:o.water*1000)+"ml"}</td><td>${t.H}ml</td><td>bere ${t.w} - bevuti ${drunk2} - mancano <b>${Math.max(0,Math.round(t.w-drunk2))}</b></td></tr><tr><td>Sale</td><td>${isShow?"tattico":saleTgt+"g"}</td><td>${sc(foodNa/400)}g</td><td>aggiungere <b>${saltAdd}</b></td></tr><tr><td>Potassio</td><td>3500-4500mg</td><td>${kFood}mg</td><td>${nK?nK+"cpr (+"+Math.round(nK*333)+"mg)":"-"}</td></tr><tr><td>Magnesio</td><td>350-400mg</td><td>${mgFood}mg</td><td>${nMg?nMg+"cpr (+"+Math.round(nMg*103.5)+"mg)":"-"}</td></tr></table><br><table class="grid" style="font-size:15px;border-collapse:separate;border-spacing:2px"><tr><td><b>Ideali</b></td><td><b>Tuoi oggi</b></td></tr><tr><td>Na:K 1:1.5</td><td style="color:${rc(rNaK,1.28,1.73,1.05,1.95)};padding:2px 10px;border-radius:6px">1:${rNaK.toFixed(2)}</td></tr><tr><td>Sale:acqua 1.5g/L</td><td style="color:${rc(rSW,1.28,1.73,1.05,1.95)};padding:2px 10px;border-radius:6px">${rSW.toFixed(2)}g/L</td></tr><tr><td>K:Mg 8:1</td><td style="color:${rc(rKMg,6.8,9.2,5.6,11.2)};padding:2px 10px;border-radius:6px">${rKMg.toFixed(1)}:1</td></tr></table>`}
  if(name==="Dati corporei"){const sv=JSON.parse(read('b_'+ds)||'{}');
   pane.innerHTML=`<input class="txt" id="peso" placeholder="Peso kg digiuno" value="${sv.peso||''}"><input class="txt" id="fm" placeholder="FM %" value="${sv.fm||''}"><input class="txt" id="idr" placeholder="Idratazione %" value="${sv.idr||''}"><input class="txt" id="note" placeholder="Note (specchio, forza, fame, sonno)" value="${sv.note||''}">
   <button onclick="saveB()">Salva</button> <small id="msg"></small>`}
@@ -458,6 +458,19 @@ function addWm(mi,ml){const m=cur.meals[mi];if(!m)return 0;
   setTimeout(()=>{if(bar.isConnected)bar.style.background='#222'},250)}
  return v}
 function addW(ml){if(ml>0){let bi=0,br=-1;cur.meals.forEach((m,mi)=>{const r=m.water-drunkOf(mi);if(r>br){br=r;bi=mi}});if(br>0)addWm(bi,Math.min(ml,br))}else{let bi=0,bd=-1;cur.meals.forEach((m,mi)=>{const d=drunkOf(mi);if(d>bd){bd=d;bi=mi}});if(bd>0)addWm(bi,-Math.min(-ml,bd))}refreshPane()}
+function smOf(mi){return +read('sm_'+cur.iso+'_'+mi)||0}
+function smDay(){let s=0;cur.meals.forEach((m,mi)=>{s+=smOf(mi)});return Math.round(s*2)/2}
+function addSm(mi,ml){const m=cur.meals[mi];if(!m)return 0;
+ const tgt=mealSale(m).g;
+ let v=Math.round((smOf(mi)+ml)*2)/2;v=Math.max(0,Math.min(tgt,v));
+ store('sm_'+cur.iso+'_'+mi,String(v));touch();
+ const bar=document.querySelector(`[data-sbar="${mi}"]`);
+ if(bar){const f=bar.querySelector('[data-sfill]'),tx=bar.querySelector('[data-stxt]');
+  if(f&&tgt>0)f.style.width=Math.min(100,Math.round(v/tgt*100))+'%';
+  if(tx)tx.textContent=`Sale da aggiungere ${tgt}g / aggiunto ${v}g`;
+  bar.style.background=ml>0?'rgba(77,163,255,.2)':'rgba(255,77,109,.2)';
+  setTimeout(()=>{if(bar.isConnected)bar.style.background='#222'},250)}
+ return v}
 function saveB(){store('b_'+cur.iso,JSON.stringify({peso:peso.value,fm:fm.value,idr:idr.value,note:note.value}));msg.textContent="Salvato ✓"}
 function expData(){const d={};try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);try{d[k]=localStorage.getItem(k)}catch(e){}}}catch(e){}
  try{for(const k in MEM)d[k]=MEM[k]}catch(e){}
@@ -482,6 +495,7 @@ document.getElementById('sheet').addEventListener('click',e=>{
  const c=e.target.closest('[data-card]');if(c&&cur){const p=c.dataset.card.split(',');card(+p[0],+p[1]);return}
  const L=e.target.closest('[data-lock]');if(L&&cur){const lp=L.dataset.lock.split(',');togLock(+lp[0],+lp[1]);return}
  const o=e.target.closest('[data-addopt]');if(o&&cur){const[ami,k]=o.dataset.addopt.split('|');const s=document.querySelector(`[data-addsel="${ami}"]`);if(s)s.value=DB[k].n;o.parentElement.style.display='none';return}
+ const sm=e.target.closest('[data-sm]');if(sm&&cur){const p=sm.dataset.sm.split(',');addSm(+p[0],+p[1]);return}
  const w=e.target.closest('[data-wm]');if(w&&cur){const p=w.dataset.wm.split(',');addWm(+p[0],+p[1]);return}
  const a=e.target.closest('[data-add]');if(a&&cur){const s=a.parentElement.querySelector('[data-addsel]');addFoodToMeal(+a.dataset.add,s&&s.value);return}
  const r=e.target.closest('[data-reset]');if(r&&cur){del(modKey(cur.iso,+r.dataset.reset));openDay(new Date(cur.iso+'T12:00:00'))}});
