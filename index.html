@@ -125,7 +125,7 @@ mgio:{n:"Magnesio IO.Genix",unit:"cpr",C:0,P:0,F:0,Na:0,K:0,Mg:103.5,H:0,g:"supM
 };
 const COOK={crudo:["Crudo/a",1,1],sciacquato:["Sciacquato",1,1],pentola:["Pentola (assorbe)",.9,1],vapore:["Vapore",.95,.95],padella:["Padella coperchio",.9,.85],piastra:["Piastra",.9,.8],forno:["Forno",.9,.85],microonde:["Microonde",.95,.95]};
 const MAX={riso:150,polenta:150,quinoa:150,gnocchi:300,patate:500,patDolci:500,zucca:400,galRiso:100,galMais:100,konjac:400,ceci:250,merluzzo:400,sogliola:400,platessa:400,nasello:400,persico:400,orata:400,spada:400,tonnoF:300,salmone:300,sgombro:250,gamberi:350,cozze:400,calamari:350,albume:400,uovo:200,skyr:300,greco:300,quark:300,fiocchi:250,ricotta:250,grana:60,olio:20,cocco:10,mandorle:60,noci:60,pistacchi:40,semiZucca:20,avocado:200,ciocc:25,budino:200,misura:60,banana:300,fragole:200,mirtilli:200,spinaci:400,zucchine:400,asparagi:300,bieta:300,broccoli:400,funghi:300,lattuga:200,cappuccio:250,carote:250,barba:200,rucola:200,salsaYo:100,senape:15,sale:10,miele:30,whey:60,wheyIso:60,kio:3,mgio:3,avena:80,salsaSoia:15,tempeh:200,seitan:200,soiaDrink:300,heroLight:30,ketchup:30,tofuAff:250,fusLatt:60,ciocc74:30,kefir:300};
-const VERSION="2.1.0";
+const VERSION="2.2.0";
 const sc=v=>Math.round(v*10)/10;
 const FOODCLS={};["merluzzo","sogliola","platessa","nasello","persico","orata","spada","tonnoF","salmone","sgombro","gamberi","cozze","calamari","albume","skyr","greco","quark","fiocchi","ricotta","kefir","whey","wheyIso","tempeh","seitan","tofuAff","budino"].forEach(k=>FOODCLS[k]="P");
 ["olio","cocco","mandorle","noci","pistacchi","semiZucca","avocado","ciocc","ciocc74","grana","uovo","fusLatt"].forEach(k=>FOODCLS[k]="F");
@@ -180,8 +180,8 @@ function distributeWater(p){if(p.cls!=="base"&&p.cls!=="clean")return;const o=ge
 function capKDay(p){let kf=0;p.meals.forEach(m=>m.items.forEach(([f,q,c])=>{if(f!=="kio")kf+=vals(f,q,c).K}));if(kf>=3500)p.meals.forEach(m=>{m.items=m.items.filter(it=>it[0]!=="kio")})}
 function resetFromToday(){const t=new Date();t.setHours(0,0,0,0);const iso=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
  if(!confirm("Cancello pasti e acqua dal "+iso+" in poi? Dati corporei restano."))return;
- ["mod5_","wm_","sm_","w_","prep_"].forEach(p=>{try{Object.keys(localStorage).filter(k=>k.startsWith(p)).forEach(k=>{const m=k.match(/\d{4}-\d{2}-\d{2}/);if(m&&m[0]>=iso)del(k)})}catch(e){}});
- try{["mod5_","wm_","sm_","w_","prep_"].forEach(p=>{Object.keys(MEM).filter(k=>k.startsWith(p)).forEach(k=>{const m=k.match(/\d{4}-\d{2}-\d{2}/);if(m&&m[0]>=iso)delete MEM[k]})})}catch(e){}
+ ["mod6_","wm_","sm_","w_","prep_","supp_"].forEach(p=>{try{Object.keys(localStorage).filter(k=>k.startsWith(p)).forEach(k=>{const m=k.match(/\d{4}-\d{2}-\d{2}/);if(m&&m[0]>=iso)del(k)})}catch(e){}});
+ try{["mod6_","wm_","sm_","w_","prep_","supp_"].forEach(p=>{Object.keys(MEM).filter(k=>k.startsWith(p)).forEach(k=>{const m=k.match(/\d{4}-\d{2}-\d{2}/);if(m&&m[0]>=iso)delete MEM[k]})})}catch(e){}
  for(let d=new Date(t);d<=end;d.setDate(d.getDate()+1))del("empty_"+isoOf(d));
  touch();renderCal();if(cur)openDay(new Date(cur.iso+"T12:00:00"))}
 function isoOf(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -205,6 +205,7 @@ function generaGiorno(){if(!cur||cur.cls!=="base"){alert("Genera solo nei giorni
  const P3=gpick(GPOOL.prot,used,yest),V3=gpick(verPool3,used,yest);
  const PR=["fiocchi","ricotta","budino","greco","ciocc74"].filter(k=>!used.has(k)&&!getOff().has(k))[0]||"fiocchi";
  const t={label:"CUT · Gen",meals:[
+  M("Colazione",[],400,"caffe o decaf"),
   M("Pranzo",[[carb1,defQty(carb1),defCook(carb1)],[P1,defQty(P1),defCook(P1)],[V1,defQty(V1),defCook(V1)],["olio",5,"crudo"]],500,"C + D"),
   M("Spuntino pre-wo",[[P2a,defQty(P2a),defCook(P2a)],[extra2,defQty(extra2),defCook(extra2)]],900,"creatina 5g post-wo"),
   M("Cena",[[P3,defQty(P3),defCook(P3)],[carb3,defQty(carb3),defCook(carb3)],[V3,defQty(V3),defCook(V3)],["olio",5,"crudo"]],700,""),
@@ -287,36 +288,43 @@ function vals(f,q,cook){const d=DB[f],r=COOK[cook]?COOK[cook][1]:1,m=d.unit?q:q/
 function M(n,items,water,supp){return{n,items,water,supp}}
 const CUT=[
 {label:"CUT · Lun",meals:[
+ M("🥣 Colazione",[],400,"caffe o decaf"),
  M("🍽️ Pranzo",[["riso",70,"pentola"],["persico",300,"vapore"],["zucchine",200,"padella"],["olio",5,"crudo"]],500,"💊 C + D"),
  M("🏋️ Spuntino pre-wo",[["skyr",250,"crudo"],["mandorle",25,"crudo"]],900,"💊 creatina 5g post-wo in 300ml"),
  M("🌙 Cena",[["sgombro",200,"forno"],["patDolci",300,"microonde"],["spinaci",200,"padella"]],700,""),
  M("😴 Pre-nanna",[["fiocchi",200,"crudo"],["galMais",20,"crudo"]],600,"🍵 tisana (Mg auto nel pasto se serve)")]},
 {label:"CUT · Mar",meals:[
+ M("🥣 Colazione",[],400,"caffe o decaf"),
  M("🍽️ Pranzo",[["polenta",60,"pentola"],["calamari",250,"padella"],["asparagi",150,"vapore"],["olio",5,"crudo"]],500,"💊 C + D · curcuma sul cereale"),
  M("🏋️ Spuntino pre-wo",[["greco",200,"crudo"],["noci",20,"crudo"]],900,"💊 creatina 5g post-wo"),
  M("🌙 Cena",[["spada",220,"piastra"],["zucca",250,"forno"],["lattuga",100,"crudo"],["olio",5,"crudo"],["grana",20,"crudo"]],700,""),
  M("😴 Pre-nanna",[["ricotta",150,"crudo"]],600,"🍵 tisana (Mg auto nel pasto se serve)")]},
 {label:"CUT · Mer",meals:[
+ M("🥣 Colazione",[],400,"caffe o decaf"),
  M("🍽️ Pranzo",[["konjac",250,"sciacquato"],["gamberi",200,"padella"],["carote",150,"padella"],["olio",5,"crudo"]],500,"💊 C + D · zenzero"),
  M("🏋️ Spuntino pre-wo",[["albume",300,"padella"],["cocco",5,"crudo"],["mandorle",15,"crudo"],["galMais",30,"crudo"]],900,"💊 creatina 5g post-wo"),
  M("🌙 Cena",[["orata",200,"forno"],["patate",150,"microonde"],["zucchine",250,"padella"],["olio",5,"crudo"]],700,""),
  M("😴 Pre-nanna",[["ciocc",12.5,"crudo"]],600,"🍵 tisana (Mg auto se serve, coccola fino 11/11)")]},
 {label:"CUT · Gio",meals:[
+ M("🥣 Colazione",[],400,"caffe o decaf"),
  M("🍽️ Pranzo",[["riso",60,"pentola"],["tempeh",150,"padella"],["zucchine",200,"padella"],["olio",5,"crudo"],["salsaSoia",5,"crudo"]],500,"💊 C + D · origano"),
  M("🏋️ Spuntino pre-wo",[["wheyIso",30,"crudo"],["banana",60,"crudo"]],900,"💊 creatina 5g post-wo"),
  M("🌙 Cena",[["merluzzo",300,"vapore"],["riso",40,"pentola"],["spinaci",200,"padella"],["olio",5,"crudo"]],700,""),
  M("😴 Pre-nanna",[["fiocchi",150,"crudo"]],600,"🍵 tisana (Mg auto nel pasto se serve)")]},
 {label:"CUT · Ven",meals:[
+ M("🥣 Colazione",[],400,"caffe o decaf"),
  M("🍽️ Pranzo",[["quinoa",50,"pentola"],["tofuAff",200,"padella"],["zucchine",200,"padella"],["olio",5,"crudo"]],500,"💊 C + D"),
  M("🏋️ Spuntino pre-wo",[["greco",200,"crudo"],["wheyIso",20,"crudo"],["noci",15,"crudo"]],900,"💊 creatina 5g post-wo"),
  M("🌙 Cena",[["tonnoF",200,"piastra"],["patate",200,"microonde"],["lattuga",100,"crudo"],["olio",5,"crudo"]],700,""),
  M("😴 Pre-nanna",[["budino",170,"crudo"]],600,"🍵 tisana (coccola fino 11/11)")]},
 {label:"CUT · Sab",meals:[
+ M("🥣 Colazione",[],400,"caffe o decaf"),
  M("🍽️ Pranzo",[["riso",50,"pentola"],["nasello",300,"piastra"],["barba",120,"forno"],["olio",5,"crudo"]],500,"💊 C + D · barbabietola pre-wo = pump"),
  M("🏋️ Spuntino pre-wo",[["avena",60,"pentola"],["wheyIso",25,"crudo"],["albume",150,"padella"],["mandorle",10,"crudo"]],900,"💊 creatina 5g post-wo"),
  M("🌙 Cena",[["seitan",150,"padella"],["patDolci",200,"microonde"],["bieta",200,"vapore"],["olio",5,"crudo"]],700,""),
  M("😴 Pre-nanna",[["ciocc74",15,"crudo"]],600,"🍵 tisana (coccola fino 11/11)")]},
 {label:"CUT · Dom",meals:[
+ M("🥣 Colazione",[],400,"caffe o decaf"),
  M("🍽️ Pranzo",[["konjac",250,"sciacquato"],["spada",200,"piastra"],["spinaci",200,"padella"],["olio",5,"crudo"]],500,"💊 C + D"),
  M("🏋️ Spuntino pre-wo",[["fiocchi",200,"crudo"],["noci",15,"crudo"]],900,"💊 creatina 5g post-wo"),
  M("🌙 Cena",[["sogliola",250,"vapore"],["polenta",60,"pentola"],["asparagi",150,"vapore"],["olio",5,"crudo"],["grana",20,"crudo"]],700,""),
@@ -397,7 +405,7 @@ function renderCal(){const c=document.getElementById('cal');c.innerHTML="";
   const short=p.label.replace(/CUT · \w+/,'CUT');
   el.innerHTML=`<b>${cap(dd.toLocaleDateString('it',{weekday:'short'}))}. ${dd.getDate()} ${cap(dd.toLocaleDateString('it',{month:'short'}))}.</b><span>${short}</span><span>${kc} kcal</span>`;
   el.onclick=()=>openDay(dd);c.appendChild(el)}}
-function modKey(iso,mi){return 'mod5_'+iso+'_'+mi}
+function modKey(iso,mi){return 'mod6_'+iso+'_'+mi}
 function loadMeal(iso,mi,base){try{const s=JSON.parse(read(modKey(iso,mi)));if(s&&s.items)return s}catch(e){}return JSON.parse(JSON.stringify(base))}
 function openDay(d){cur=d;const p=getPlan(d);
  p.dstr=d.toLocaleDateString('it',{day:'numeric',month:'long'});
@@ -424,7 +432,7 @@ function tab(el){document.querySelectorAll('.tab').forEach(t=>t.classList.remove
   return `<div class="meal" data-meal="${mi}"><div class="mealhead"><b>${m.n}</b><span class="kcal">${v.kc} kcal · <span class="mac">🌾${v.C}g 💪${v.P}g 🫒${v.F}g</span></span><button class="ghost" data-reset="${mi}">reset</button></div>
   ${saltRow(m,mi)}
   <div class="wbar" data-wbar="${mi}" style="position:relative;background:#222;border:1px solid #4da3ff;border-radius:10px;overflow:hidden;margin:5px 0"><div data-wfill="${mi}" style="height:34px;width:${m.water>0?Math.round((+read('wm_'+cur.iso+'_'+mi)||0)/m.water*100):0}%;background:#4da3ff;transition:width .5s"></div><button class="ghost" data-wm="${mi},-50" style="position:absolute;left:4px;top:4px;opacity:.25">-</button><div data-wtxt="${mi}" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;pointer-events:none">Acqua da bere ${m.water-(+read('wm_'+cur.iso+'_'+mi)||0)}ml / bevuta ${+read('wm_'+cur.iso+'_'+mi)||0}ml</div><button class="ghost" data-wm="${mi},50" style="position:absolute;right:4px;top:4px;opacity:.25">+</button></div>
-  ${m.supp?`<div class="food"><div class="row1"><span>${m.supp}</span></div></div>`:""}
+  ${m.supp?`<div class="food" data-supp="${mi}"><div class="row1"><span>${m.supp}</span></div></div>`:""}
   <div class="supp">${hint}</div>`+
   m.items.map((it,ii)=>{const[f,q,c]=it,vv=vals(f,q,c),mates=groupMates(f,m);
    const isSupp=(f==="kio"||f==="mgio");
@@ -539,9 +547,10 @@ function expData(){const d={};try{for(let i=0;i<localStorage.length;i++){const k
  document.getElementById('modal').style.display='flex'}
 let tx0=null,ty0=null;
 function togDone(mi,ii){let done=[];try{done=JSON.parse(read('prep_'+cur.iso+'_'+mi)||'[]')}catch(e){};done=done.includes(ii)?done.filter(x=>x!==ii):[...done,ii];store('prep_'+cur.iso+'_'+mi,JSON.stringify(done));paintDone()}
-function paintDone(){if(!cur)return;document.querySelectorAll('#pane [data-drag]').forEach(el=>{const p=el.dataset.drag.split(',');let done=[];try{done=JSON.parse(read('prep_'+cur.iso+'_'+p[0])||'[]')}catch(e){}const box=el.closest('.food');if(box)box.classList.toggle('done',done.includes(+p[1]))})}
+function togSupp(mi){const k='supp_'+cur.iso+'_'+mi;if(read(k)==='1')del(k);else store(k,'1');paintDone()}
+function paintDone(){if(!cur)return;document.querySelectorAll('#pane [data-drag]').forEach(el=>{const p=el.dataset.drag.split(',');let done=[];try{done=JSON.parse(read('prep_'+cur.iso+'_'+p[0])||'[]')}catch(e){}const box=el.closest('.food');if(box)box.classList.toggle('done',done.includes(+p[1]))});document.querySelectorAll('#pane [data-supp]').forEach(el=>{const box=el.closest('.food');if(box)box.classList.toggle('done',read('supp_'+cur.iso+'_'+el.dataset.supp)==='1')})}
 document.getElementById('sheet').addEventListener('touchstart',e=>{const t=e.changedTouches[0];tx0=t.clientX;ty0=t.clientY},{passive:true});
-document.getElementById('sheet').addEventListener('touchend',e=>{if(tx0==null||!cur)return;const t=e.changedTouches[0],dx=t.clientX-tx0,dy=t.clientY-ty0;tx0=null;if(dx>60&&Math.abs(dy)<40){const d=e.target.closest('[data-drag]');if(d){const p=d.dataset.drag.split(',');togDone(+p[0],+p[1])}}},{passive:true});
+document.getElementById('sheet').addEventListener('touchend',e=>{if(tx0==null||!cur)return;const t=e.changedTouches[0],dx=t.clientX-tx0,dy=t.clientY-ty0;tx0=null;if(dx>60&&Math.abs(dy)<40){const d=e.target.closest('[data-drag]');if(d){const p=d.dataset.drag.split(',');togDone(+p[0],+p[1])}else{const s=e.target.closest('[data-supp]');if(s)togSupp(+s.dataset.supp)}}},{passive:true});
 document.getElementById('sheet').addEventListener('focusin',e=>{const s=e.target.closest('[data-addsel]');if(s&&cur)renderAddMenu(+s.dataset.addsel,s.value)});
 document.getElementById('sheet').addEventListener('input',e=>{const s=e.target.closest('[data-addsel]');if(s&&cur)renderAddMenu(+s.dataset.addsel,s.value)});
 document.getElementById('sheet').addEventListener('focusout',e=>{const s=e.target.closest('[data-addsel]');if(s)setTimeout(()=>{const mm=document.querySelector(`[data-addmenu="${s.dataset.addsel}"]`);if(mm)mm.style.display='none'},200)});
