@@ -40,7 +40,7 @@ button.ghost{background:#333;color:#eee;font-weight:400;padding:5px 9px;font-siz
 #sheet{display:none;background:#14162b;border:2px solid var(--gold);border-radius:16px;padding:14px;margin-top:12px}
 .tabs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.tab{background:#222;border:1px solid #555;color:#eee;border-radius:9px;padding:7px 10px;cursor:pointer;font-size:13px}
 .tab.on{background:var(--gold);color:#111;font-weight:800}
-.meal{background:#1d2038;border:1px solid #3a3f70;border-radius:12px;padding:10px;margin:8px 0}
+.meal{background:#1d2038;border:2px solid #6670b0;border-radius:16px;padding:12px;margin:0 0 122px 0;box-shadow:0 6px 16px rgba(0,0,0,.45)}
 .mealhead{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
 .kcal{color:var(--gold);font-weight:800}.mac{font-size:12px}
 .food{background:#262a4d;border-radius:9px;padding:7px 9px;margin:5px 0;font-size:15px}
@@ -62,7 +62,7 @@ summary{cursor:pointer;font-weight:700}
 #modal .box{background:linear-gradient(170deg,#2b2f5e,#14162b);border:3px solid var(--gold);border-radius:16px;padding:18px;max-width:340px;width:100%;box-shadow:0 0 30px #ffd60a55}
 #modal table{width:100%;font-size:14px;border-collapse:collapse}#modal td{padding:4px 2px;border-bottom:1px solid #444}
 </style></head><body>
-<span id="syncDot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#888;margin-right:4px"></span><button id="gearBtn" onclick="togSet()">⚙️</button><h1 style="text-align:center;font-size:46px;letter-spacing:1px;margin:10px 0;cursor:pointer;color:var(--gold);font-family:'Arial Black',sans-serif;line-height:1.05" onclick="showCal()" title="Calendario">PEAK WEEK<br>CALCULATOR</h1><div style="text-align:center;font-size:11px;color:#888"><small>Calendario interattivo per la preparazione alimentare di una gara, creato da Marco Spacca</small></div>
+<span id="syncDot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#888;margin-right:4px"></span><span id="versionInfo" style="font-size:11px;color:#888;margin-left:6px;vertical-align:middle">versione 3.1.1 · Ultima mod: mai</span><button id="gearBtn" onclick="togSet()">⚙️</button><h1 style="text-align:center;font-size:46px;letter-spacing:1px;margin:10px 0;cursor:pointer;color:var(--gold);font-family:'Arial Black',sans-serif;line-height:1.05" onclick="showCal()" title="Calendario">PEAK WEEK<br>CALCULATOR</h1><div style="text-align:center;font-size:11px;color:#888"><small>Calendario interattivo per la preparazione alimentare di una gara, creato da Marco Spacca</small></div>
 <div id="setMenu" style="position:fixed;top:64px;right:12px;z-index:30;display:flex;flex-direction:column;gap:8px;background:#14162b;border:2px solid var(--gold);border-radius:14px;padding:12px;min-width:190px"><button onclick="openObj()">Obiettivi</button><button onclick="openPref()">Preferenze</button><button onclick="expData()">Salva con nome</button><button onclick="document.getElementById('impFile').click()">Carica</button><button class="ghost" onclick="svuotaDaOggi()">Svuota da oggi</button><button class="ghost" onclick="resetFromToday()">Ripristina template</button><input type="file" id="impFile" accept="application/json" style="display:none" onchange="impData(this)"></div>
 <div id="ovl" style="display:none;position:fixed;inset:0;background:#000c;z-index:20;padding:20px;overflow:auto" onclick="if(event.target===this)closeOv()"><div id="ovlBox" style="background:#14162b;border:2px solid var(--gold);border-radius:16px;padding:16px;max-width:580px;width:100%;margin:0 auto"></div></div>
 <div id="cal"></div><div id="sheet"></div>
@@ -149,7 +149,7 @@ mgio:{n:"Magnesio IO.Genix",unit:"cpr",C:0,P:0,F:0,Na:0,K:0,Mg:103.5,H:0,g:"supM
 };
 const COOK={crudo:["Crudo/a",1,1],sciacquato:["Sciacquato",1,1],pentola:["Pentola (assorbe)",.9,1],vapore:["Vapore",.95,.95],padella:["Padella coperchio",.9,.85],piastra:["Piastra",.9,.8],forno:["Forno",.9,.85],microonde:["Microonde",.95,.95]};
 const MAX={riso:150,polenta:150,quinoa:150,gnocchi:300,patate:500,patDolci:500,zucca:400,galRiso:100,galMais:100,konjac:400,ceci:250,merluzzo:400,sogliola:400,platessa:400,nasello:400,persico:400,orata:400,spada:400,tonnoF:300,salmone:300,sgombro:250,gamberi:350,cozze:400,calamari:350,albume:400,uovo:200,skyr:300,greco:300,quark:300,fiocchi:250,ricotta:250,grana:60,olio:20,cocco:10,mandorle:60,noci:60,pistacchi:40,semiZucca:20,avocado:200,ciocc:25,budino:200,misura:60,banana:300,fragole:200,mirtilli:200,spinaci:400,zucchine:400,asparagi:300,bieta:300,broccoli:400,funghi:300,lattuga:200,cappuccio:250,carote:250,barba:200,rucola:200,salsaYo:100,senape:15,sale:10,miele:30,whey:60,wheyIso:60,kio:3,mgio:3,avena:80,salsaSoia:15,tempeh:200,seitan:200,soiaDrink:300,heroLight:30,ketchup:30,tofuAff:250,fusLatt:60,ciocc74:30,kefir:300};
-const VERSION="3.1.1";
+const VERSION="3.2.0";
 const sc=v=>Math.round(v*10)/10;
 const FOODCLS={};["merluzzo","sogliola","platessa","nasello","persico","orata","spada","tonnoF","salmone","sgombro","gamberi","cozze","calamari","albume","skyr","greco","quark","fiocchi","ricotta","kefir","whey","wheyIso","tempeh","seitan","tofuAff","budino"].forEach(k=>FOODCLS[k]="P");
 ["olio","cocco","mandorle","noci","pistacchi","semiZucca","avocado","ciocc","ciocc74","grana","uovo","fusLatt"].forEach(k=>FOODCLS[k]="F");
@@ -267,7 +267,7 @@ function svuotaDaOggi(){const t=new Date();t.setHours(0,0,0,0);const iso=isoOf(t
 function touch(){store("lastMod",new Date().toISOString());store("lastModTs",String(Date.now()));paintMeta();if(cur)fbPushDay(cur.iso)}
 function paintMeta(){let s="mai";
  try{const v=read("lastMod");if(v)s=new Date(v).toLocaleString("it",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"})}catch(e){}
- document.querySelectorAll(".metaLine").forEach(el=>{el.textContent="versione "+VERSION+" · Ultima modifica: "+s});const d=document.getElementById("syncDot");if(d){try{d.style.background=FS?"#2ecc71":"#e74c3c"}catch(e){d.style.background="#e74c3c"}}}
+ document.getElementById("syncDot").nextElementSibling.textContent="versione "+VERSION+" · Ultima mod: "+s;const d=document.getElementById("syncDot");if(d){try{d.style.background=FS?"#2ecc71":"#e74c3c"}catch(e){d.style.background="#e74c3c"}}}
 function closeOv(){document.getElementById("ovl").style.display="none"}
 document.getElementById('setMenu').addEventListener('click',()=>{document.getElementById('setMenu').classList.remove('open')});
 function togSet(){const m=document.getElementById('setMenu');if(m)m.classList.toggle('open');document.getElementById('ovl').style.display='none'}
@@ -467,12 +467,12 @@ function dayTotals(){let t={C:0,P:0,F:0,Na:0,K:0,Mg:0,H:0,kc:0,w:0};
  cur.meals.forEach(m=>{const v=mealTotals(m);for(const k in v)t[k]+=v[k];t.w+=m.water});for(const k in t)t[k]=Math.round(t[k]*10)/10;return t}
 function tab(el){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));el.classList.add('on');
  const name=el.dataset.t,pane=document.getElementById('pane'),t=dayTotals(),ds=cur.iso;
- if(name==="Dieta"){pane.innerHTML=`<div class="food" data-suppitem="R,R"><div class="row1"><span>⏰ Risveglio: 💊 B12</span></div></div>`+cur.meals.map((m,mi)=>{const v=mealTotals(m);
+ if(name==="Dieta"){pane.innerHTML=`<div class="wbar" data-gwbar style="position:relative;background:#222;border:2px solid #4da3ff;border-radius:10px;overflow:hidden;margin:10px 0;cursor:pointer"><div data-gwfill style="height:38px;width:${cur.meals.reduce((s,m)=>s+(m.water||0),0)>0?Math.min(100,Math.round(drunkDay()/cur.meals.reduce((s,m)=>s+(m.water||0),0)*100)):0}%;background:#4da3ff;transition:width .5s"></div><button class="ghost" data-gwm="-50" style="position:absolute;left:4px;top:4px">−</button><div data-gwl style="position:absolute;left:48px;top:0;height:100%;display:flex;align-items:center;font-size:13px;font-weight:700;pointer-events:none">Bevuta ${drunkDay()}ml</div><div data-gwtxt style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;pointer-events:none">💧 Acqua Totale ${cur.meals.reduce((s,m)=>s+(m.water||0),0)}ml</div><div data-gwr style="position:absolute;right:48px;top:0;height:100%;display:flex;align-items:center;font-size:13px;font-weight:700;pointer-events:none">Da bere ${Math.max(0,cur.meals.reduce((s,m)=>s+(m.water||0),0)-drunkDay())}ml</div><button class="ghost" data-gwm="50" style="position:absolute;right:4px;top:4px">+</button></div><div class="food" data-suppitem="R,R"><div class="row1"><span>⏰ Risveglio: 💊 B12</span></div></div>`+cur.meals.map((m,mi)=>{const v=mealTotals(m);
   let hint="";const hasS=m.items.some(it=>it[0]==="kio"||it[0]==="mgio");
   if(v.K<m.baseK*.85||v.Mg<m.baseMg*.85)hint=" ⚠️ sotto target anche con integrazione max: servi alimenti più ricchi di K/Mg";
   else if(hasS)hint=" ✓ K/Mg integrati nel pasto";
   else hint=" ✓ K/Mg dal cibo ok";
-  return `<div class="meal" data-meal="${mi}"><div class="mealhead"><b>${m.n}</b><span class="kcal">${v.kc} kcal · <span class="mac">🌾${v.C}g 💪${v.P}g 🫒${v.F}g</span></span><button class="ghost" data-reset="${mi}">reset</button> <button class="ghost" data-regen="${mi}">Rigenera pasto</button></div>
+  return `<div class="meal" data-meal="${mi}"><div style="text-align:center;font-size:clamp(16px,4.5vw,26px);font-weight:900;color:var(--gold)">${m.n}</div><div style="text-align:center;margin-bottom:4px"><span class="kcal">${v.kc} kcal · <span class="mac">🌾${v.C}g 💪${v.P}g 🫒${v.F}g</span></span></div><div style="display:flex;justify-content:space-between;align-items:center"><div style="position:relative"><div data-addmenu="${mi}" style="display:none;position:absolute;top:100%;left:0;min-width:220px;max-height:180px;overflow:auto;background:#0d0f1a;border:1px solid #555;border-radius:8px;z-index:5;margin-top:4px"></div><input class="inv" style="min-width:110px;width:110px;border:0;background:#0d0f1a" data-addsel="${mi}" placeholder="Cerca alimento..." autocomplete="off"></div><div style="position:relative"><button class="ghost" data-mlbtn="${mi}">&#8942;</button><div class="mlmenu" style="display:none;position:absolute;top:100%;right:0;background:#14162b;border:0;border-radius:8px;z-index:9;min-width:170px;overflow:hidden;box-shadow:0 10px 26px rgba(0,0,0,.6)"><div class="ghost" data-reset="${mi}" style="display:block;width:100%;text-align:left;border-radius:0;border-bottom:1px solid #555;padding:10px 14px">Reset</div><div class="ghost" data-regen="${mi}" style="display:block;width:100%;text-align:left;border-radius:0;padding:10px 14px">Rigenera pasto</div></div></div></div></div>
   
   
   <div class="supp">${hint}</div>`+
@@ -480,7 +480,7 @@ function tab(el){document.querySelectorAll('.tab').forEach(t=>t.classList.remove
   m.items.map((it,ii)=>{const[f,q,c]=it,vv=vals(f,q,c),mates=groupMates(f,m);if(f==="kio"||f==="mgio")return "";
    if(f==="sale")return `<tr><td colspan="5">🧂 Sale · ${q}g · fisso</td></tr>`;
    if(f==="kio"||f==="mgio")return `<tr><td colspan="5">💊 ${DB[f].n} · ${q}${DB[f].unit||"g"}</td></tr>`;
-   return `<tr data-drag="${mi},${ii}"><td style="white-space:nowrap"><span draggable="true" style="cursor:grab;color:#888;touch-action:none;user-select:none">&#8942;&#8942;</span> <button class="ghost" data-del="${mi},${ii}">❌</button> <button class="ghost" data-card="${mi},${ii}">📊</button></td><td><select class="inv" data-swap="${mi},${ii}"><option value="${f}" selected>${DB[f].n}</option>${mates.map(k=>`<option value="${k}">${DB[k].n}</option>`).join('')}</select></td><td style="white-space:nowrap"><button class="ghost" data-qstep="${mi},${ii},-5">-</button> <input class="inv" type="number" min="5" max="${MAX[f]||200}" step="5" value="${q}" data-qty="${mi},${ii}"> <button class="ghost" data-qstep="${mi},${ii},5">+</button></td><td style="color:#fff">${COOK[c][0]}</td><td style="text-align:right"><button class="ghost" data-lock="${mi},${ii}" style="border:1px solid #1b2a6b;${(m.locks&&m.locks[ii])?"":"opacity:.25"}">🔒</button></td></tr>`}).join('')+suppRows(m,mi)+`${saltRow(m,mi)?`<tr><td colspan="5">${saltRow(m,mi)}</td></tr>`:""}`+`<tr><td colspan="5"><div class="wbar" data-wbar="${mi}" style="position:relative;background:#222;border:1px solid #4da3ff;border-radius:10px;overflow:hidden;margin:5px 0"><div data-wfill="${mi}" style="height:34px;width:${m.water>0?Math.round((+read('wm_'+cur.iso+'_'+mi)||0)/m.water*100):0}%;background:#4da3ff;transition:width .5s"></div><button class="ghost" data-wm="${mi},-50" style="position:absolute;left:4px;top:4px;opacity:.25">-</button><div data-wtxt="${mi}" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;pointer-events:none">Acqua da bere ${m.water-(+read('wm_'+cur.iso+'_'+mi)||0)}ml / bevuta ${+read('wm_'+cur.iso+'_'+mi)||0}ml</div><button class="ghost" data-wm="${mi},50" style="position:absolute;right:4px;top:4px;opacity:.25">+</button></div></td></tr>`+`</table>`+`<div class="food"><div style="display:flex;justify-content:center"><div style="position:relative"><div data-addmenu="${mi}" style="display:none;position:absolute;bottom:100%;left:0;min-width:220px;max-height:180px;overflow:auto;background:#0d0f1a;border:1px solid #555;border-radius:8px;z-index:5;margin-bottom:4px"></div><input class="inv" style="min-width:170px" data-addsel="${mi}" placeholder="Cerca alimento..." autocomplete="off"></div></div></div>`+`</div>`}).join('')
+   return `<tr data-drag="${mi},${ii}"><td style="white-space:nowrap"><span draggable="true" style="cursor:grab;color:#888;touch-action:none;user-select:none">&#8942;&#8942;</span> <button class="ghost" data-del="${mi},${ii}">❌</button> <button class="ghost" data-card="${mi},${ii}">📊</button></td><td><select class="inv" data-swap="${mi},${ii}"><option value="${f}" selected>${DB[f].n}</option>${mates.map(k=>`<option value="${k}">${DB[k].n}</option>`).join('')}</select></td><td style="white-space:nowrap"><button class="ghost" data-qstep="${mi},${ii},-5">-</button> <input class="inv" type="number" min="5" max="${MAX[f]||200}" step="5" value="${q}" data-qty="${mi},${ii}"> <button class="ghost" data-qstep="${mi},${ii},5">+</button></td><td style="color:#fff">${COOK[c][0]}</td><td style="text-align:right"><button class="ghost" data-lock="${mi},${ii}" style="border:1px solid #1b2a6b;${(m.locks&&m.locks[ii])?"":"opacity:.25"}">🔒</button></td></tr>`}).join('')+suppRows(m,mi)+`${saltRow(m,mi)?`<tr><td colspan="5">${saltRow(m,mi)}</td></tr>`:""}`+`<tr><td colspan="5"><div class="wbar" data-wbar="${mi}" style="position:relative;background:#222;border:1px solid #4da3ff;border-radius:10px;overflow:hidden;margin:5px 0"><div data-wfill="${mi}" style="height:34px;width:${m.water>0?Math.round((+read('wm_'+cur.iso+'_'+mi)||0)/m.water*100):0}%;background:#4da3ff;transition:width .5s"></div><div data-wtxt="${mi}" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;pointer-events:none">Acqua da bere ${m.water-(+read('wm_'+cur.iso+'_'+mi)||0)}ml / bevuta ${+read('wm_'+cur.iso+'_'+mi)||0}ml</div></div></td></tr>`+`</table>`+`</div>`}).join('')
   ;
   // click/change gestiti in delegazione su #sheet (fondo script)
  }
@@ -549,6 +549,10 @@ function togLock(mi,ii){const m=cur.meals[mi];m.locks=m.locks||m.items.map(()=>f
 function refreshPane(flashMi){const on=document.querySelector('.tab.on');if(!on||!cur)return;distributeNa(cur);distributeWater(cur);capKDay(cur);tab(on);paintDone();}
 function drunkOf(mi){return +read('wm_'+cur.iso+'_'+mi)||0}
 function drunkDay(){let s=0;cur.meals.forEach((m,mi)=>{s+=drunkOf(mi)});return s}
+let
+wmFlashT=0;
+function flash(bar,ml){bar.style.background=ml>0?'rgba(77,163,255,.2)':'rgba(255,77,109,.2)';clearTimeout(wmFlashT);wmFlashT=setTimeout(()=>{document.querySelectorAll('[data-gwbar],[data-wbar]').forEach(b=>b.style.background='#222')},250)}
+function paintGW(){const bar=document.querySelector('[data-gwbar]');if(!bar||!cur)return;const tot=cur.meals.reduce((s,m)=>s+(m.water||0),0),d=drunkDay();const f=bar.querySelector('[data-gwfill]'),tx=bar.querySelector('[data-gwtxt]');if(f)f.style.width=(tot>0?Math.min(100,Math.round(d/tot*100)):0)+'%';if(tx)tx.textContent=`💧 Acqua Totale ${tot}ml`;const l=bar.querySelector('[data-gwl]'),r=bar.querySelector('[data-gwr]');if(l)l.textContent=`Bevuta ${d}ml`;if(r)r.textContent=`Da bere ${Math.max(0,tot-d)}ml`}
 function addWm(mi,ml){const m=cur.meals[mi];if(!m)return 0;
  const v=Math.max(0,m.water>0?Math.min(m.water,drunkOf(mi)+ml):0);
  store('wm_'+cur.iso+'_'+mi,String(v));touch();
@@ -556,9 +560,8 @@ function addWm(mi,ml){const m=cur.meals[mi];if(!m)return 0;
  if(bar){const f=bar.querySelector('[data-wfill]'),tx=bar.querySelector('[data-wtxt]');
   if(f&&m.water>0)f.style.width=Math.round(v/m.water*100)+'%';
   if(tx)tx.textContent=`Acqua da bere ${m.water-v}ml / bevuta ${v}ml`;
-  bar.style.background=ml>0?'rgba(77,163,255,.2)':'rgba(255,77,109,.2)';
-  setTimeout(()=>{if(bar.isConnected)bar.style.background='#222'},250)}
- return v}
+  flash(bar,ml)}
+ return paintGW(),v}
 function smOf(mi){return +read('sm_'+cur.iso+'_'+mi)||0}
 function smDay(){let s=0;cur.meals.forEach((m,mi)=>{s+=smOf(mi)});return Math.round(s*2)/2}
 function addSm(mi,ml){const m=cur.meals[mi];if(!m)return 0;
@@ -569,8 +572,7 @@ function addSm(mi,ml){const m=cur.meals[mi];if(!m)return 0;
  if(bar){const f=bar.querySelector('[data-sfill]'),tx=bar.querySelector('[data-stxt]');
   if(f&&tgt>0)f.style.width=Math.min(100,Math.round(v/tgt*100))+'%';
   if(tx)tx.textContent=`Sale da aggiungere ${Math.round((tgt-v)*10)/10}g / aggiunto ${v}g`;
-  bar.style.background=ml>0?'rgba(77,163,255,.2)':'rgba(255,77,109,.2)';
-  setTimeout(()=>{if(bar.isConnected)bar.style.background='#222'},250)}
+  flash(bar,ml)}
  return v}
 function saveB(){store('b_'+cur.iso,JSON.stringify({peso:peso.value,fm:fm.value,idr:idr.value,note:note.value}));msg.textContent="Salvato ✓"}
 async function expData(){const d={};try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);try{d[k]=localStorage.getItem(k)}catch(e){}}}catch(e){}
@@ -612,6 +614,7 @@ document.getElementById('sheet').addEventListener('change',e=>{const t=e.target;
  if(t.dataset.qty){const p=t.dataset.qty.split(',');editQty(+p[0],+p[1],+t.value)}
  else if(t.dataset.swap&&t.value){const p=t.dataset.swap.split(',');swapFood(+p[0],+p[1],t.value)}});
 document.getElementById('sheet').addEventListener('click',e=>{
+ if(!e.target.closest('.mlmenu')&&!e.target.closest('[data-mlbtn]'))document.querySelectorAll('.mlmenu').forEach(x=>{x.style.display='none'});const mb=e.target.closest('[data-mlbtn]');if(mb){const mm=mb.parentElement.querySelector('.mlmenu');if(mm)mm.style.display=mm.style.display==='block'?'none':'block';return}
  const c=e.target.closest('[data-card]');if(c&&cur){const p=c.dataset.card.split(',');card(+p[0],+p[1]);return}
  const rg=e.target.closest('[data-regen]');if(rg&&cur){rigeneraPasto(+rg.dataset.regen);return}
  const qs=e.target.closest('[data-qstep]');if(qs&&cur){const p=qs.dataset.qstep.split(',');const mm=cur.meals[+p[0]];editQty(+p[0],+p[1],mm.items[+p[1]][1]+(+p[2]));return}
@@ -620,6 +623,10 @@ document.getElementById('sheet').addEventListener('click',e=>{
  const o=e.target.closest('[data-addopt]');if(o&&cur){const[ami,k]=o.dataset.addopt.split('|');addFoodToMeal(+ami,DB[k].n);return}
  const sm=e.target.closest('[data-sm]');if(sm&&cur){const p=sm.dataset.sm.split(',');addSm(+p[0],+p[1]);return}
  const w=e.target.closest('[data-wm]');if(w&&cur){const p=w.dataset.wm.split(',');addWm(+p[0],+p[1]);return}
+ const g=e.target.closest('[data-gwm]');if(g&&cur){const ml=+g.dataset.gwm;
+  if(ml>0){const idx=cur.meals.findIndex((m,i)=>m.water>drunkOf(i));if(idx>=0)addWm(idx,Math.min(50,cur.meals[idx].water-drunkOf(idx)))}
+  else{for(let mi=cur.meals.length-1;mi>=0;mi--){if(drunkOf(mi)>0){addWm(mi,-50);break}}}
+  return}
  const a=e.target.closest('[data-add]');if(a&&cur){const s=a.parentElement.querySelector('[data-addsel]');addFoodToMeal(+a.dataset.add,s&&s.value);return}
  const r=e.target.closest('[data-reset]');if(r&&cur){del(modKey(cur.iso,+r.dataset.reset));openDay(new Date(cur.iso+'T12:00:00'))}});
 loadCustom();paintMeta();renderCal();
