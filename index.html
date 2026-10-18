@@ -67,7 +67,8 @@ summary{cursor:pointer;font-weight:700}
 #modal table{width:100%;font-size:14px;border-collapse:collapse}#modal td{padding:4px 2px;border-bottom:1px solid #444}
 </style></head><body>
 <span id="syncDot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#888;margin-right:4px"></span><span id="versionInfo" style="font-size:11px;color:#888;margin-left:6px;vertical-align:middle">versione 3.1.1 · Ultima mod: mai</span><button id="gearBtn" onclick="togSet()">⚙️</button><h1 style="text-align:center;font-size:46px;letter-spacing:1px;margin:10px 0;cursor:pointer;color:var(--gold);font-family:'Arial Black',sans-serif;line-height:1.05" onclick="showCal()" title="Calendario">PEAK WEEK<br>CALCULATOR</h1><div style="text-align:center;font-size:11px;color:#888"><small>Calendario interattivo per la preparazione alimentare di una gara, creato da Marco Spacca</small></div>
-<div id="setMenu" style="position:fixed;top:64px;right:12px;z-index:30;display:flex;flex-direction:column;gap:8px;background:#14162b;border:2px solid var(--gold);border-radius:14px;padding:12px;min-width:190px"><button onclick="openObj()">Obiettivi</button><button onclick="openPref()">Preferenze</button><button onclick="expData()">Salva con nome</button><button onclick="document.getElementById('impFile').click()">Carica</button><button class="ghost" onclick="svuotaDaOggi()">Svuota da oggi</button><button class="ghost" onclick="resetFromToday()">Ripristina template</button><input type="file" id="impFile" accept="application/json" style="display:none" onchange="impData(this)"></div>
+<div id="setMenu" style="position:fixed;top:64px;right:12px;z-index:30;display:flex;flex-direction:column;gap:8px;background:#14162b;border:2px solid var(--gold);border-radius:14px;padding:12px;min-width:190px"><button onclick="openObj()">Obiettivi</button><button onclick="openPref()">Preferenze</button><button onclick="expData()">Salva con nome</button><button onclick="document.getElementById('impFile').click()">Carica</button><button class="ghost" onclick="svuotaDaOggi()">Svuota da oggi</button><button class="ghost" onclick="resetFromToday()">Ripristina template</button>
+<button onclick="caricaPianoGara()" style="background:#27ae60">ðŸ“¥ Carica Piano 18/10-15/11</button><input type="file" id="impFile" accept="application/json" style="display:none" onchange="impData(this)"></div>
 <div id="ovl" style="display:none;position:fixed;inset:0;background:#000c;z-index:20;padding:20px;overflow:auto" onclick="if(event.target===this)closeOv()"><div id="ovlBox" style="background:#14162b;border:2px solid var(--gold);border-radius:16px;padding:16px;max-width:580px;width:100%;margin:0 auto"></div></div>
 <div id="cal"></div><div id="sheet"></div>
 <div id="modal" onclick="this.style.display='none'"><div class="box" onclick="event.stopPropagation()" id="mbox"></div></div>
@@ -153,7 +154,7 @@ mgio:{n:"Magnesio IO.Genix",unit:"cpr",C:0,P:0,F:0,Na:0,K:0,Mg:103.5,H:0,g:"supM
 };
 const COOK={crudo:["Crudo/a",1,1],sciacquato:["Sciacquato",1,1],pentola:["Pentola (assorbe)",.9,1],vapore:["Vapore",.95,.95],padella:["Padella coperchio",.9,.85],piastra:["Piastra",.9,.8],forno:["Forno",.9,.85],microonde:["Microonde",.95,.95]};
 const MAX={riso:150,polenta:150,quinoa:150,gnocchi:300,patate:500,patDolci:500,zucca:400,galRiso:100,galMais:100,konjac:400,ceci:250,merluzzo:400,sogliola:400,platessa:400,nasello:400,persico:400,orata:400,spada:400,tonnoF:300,salmone:300,sgombro:250,gamberi:350,cozze:400,calamari:350,albume:400,uovo:200,skyr:300,greco:300,quark:300,fiocchi:250,ricotta:250,grana:60,olio:20,cocco:10,mandorle:60,noci:60,pistacchi:40,semiZucca:20,avocado:200,ciocc:25,budino:200,misura:60,banana:300,fragole:200,mirtilli:200,spinaci:400,zucchine:400,asparagi:300,bieta:300,broccoli:400,funghi:300,lattuga:200,cappuccio:250,carote:250,barba:200,rucola:200,salsaYo:100,senape:15,sale:10,miele:30,whey:60,wheyIso:60,kio:3,mgio:3,avena:80,salsaSoia:15,tempeh:200,seitan:200,soiaDrink:300,heroLight:30,ketchup:30,tofuAff:250,fusLatt:60,ciocc74:30,kefir:300};
-const VERSION="3.3.3";
+const VERSION="3.3.4";
 const sc=v=>Math.round(v*10)/10;
 const FOODCLS={};["merluzzo","sogliola","platessa","nasello","persico","orata","spada","tonnoF","salmone","sgombro","gamberi","cozze","calamari","albume","skyr","greco","quark","fiocchi","ricotta","kefir","whey","wheyIso","tempeh","seitan","tofuAff","budino"].forEach(k=>FOODCLS[k]="P");
 ["olio","cocco","mandorle","noci","pistacchi","semiZucca","avocado","ciocc","ciocc74","grana","uovo","fusLatt"].forEach(k=>FOODCLS[k]="F");
@@ -583,7 +584,144 @@ async function expData(){const d={};try{for(let i=0;i<localStorage.length;i++){c
  try{for(const k in MEM)d[k]=MEM[k]}catch(e){}
  const j=JSON.stringify(d);
  if(window.showSaveFilePicker){try{const h=await showSaveFilePicker({suggestedName:"road-to-stage-backup.json",types:[{description:"Backup",accept:{"application/json":[".json"]}}]});const w=await h.createWritable();await w.write(j);await w.close();return}catch(e){if(e&&e.name==="AbortError")return}}
- const b=new Blob([j],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="road-to-stage-backup.json";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}function impData(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);Object.keys(d).forEach(k=>{if(d[k]!=null)store(k,d[k])});touch();alert("Ripristinato OK");if(cur)openDay(new Date(cur.iso+"T12:00:00"));else renderCal()}catch(e){alert("File non valido")}};r.readAsText(f);inp.value=""}function suppRows(m,mi){let h="",ix=0;
+ const b=new Blob([j],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="road-to-stage-backup.json";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}// ============================================
+// CARICA PIANO 18/10 → 15/11 (pulsante nel menu ⚙️)
+// ============================================
+function caricaPianoGara() {
+  if (!confirm("Sovrascrive tutti i pasti dal 18/10 al 15/11. Continua?")) return;
+  if (typeof scaleToObj !== "function" || typeof scaleWaterSalt !== "function" ||
+      typeof getObj !== "function" || typeof DB === "undefined" ||
+      typeof store !== "function") {
+    alert("Funzioni app non pronte. Ricarica la pagina e riprova.");
+    return;
+  }
+
+  function isoOf(d) {
+    return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  }
+  const M = (typeof window.M === "function") ? window.M :
+    (n, items, water, supp) => ({ n: n, items, water: water||0, supp: supp||"" });
+
+  const COL = M("Colazione", [], 0, "☕ Caffè");
+  const Q = {
+    wheyIso: 40, greco: 200, albume: 100,
+    merluzzo: 250, seitan: 150, tofuAff: 150, salmone: 100,
+    quark: 100, whey: 30, avena: 60, soiaDrink: 250,
+    riso: 90, patDolci: 100, patate: 250,
+    zucchine: 200, broccoli: 150, spinaci: 200, carote: 150,
+    olio: 10, fragole: 100, banana: 150, miele: 15, galRiso: 40
+  };
+
+  const BASELINE = { label: "BASELINE", cls: "base", meals: [
+    COL,
+    M("Spuntino", [["wheyIso", Q.wheyIso, "crudo"], ["greco", Q.greco, "crudo"], ["albume", Q.albume, "crudo"], ["olio", 5, "crudo"]], 300, ""),
+    M("Pranzo", [["merluzzo", Q.merluzzo, "vapore"], ["riso", Q.riso, "pentola"], ["zucchine", Q.zucchine, "padella"], ["olio", 10, "crudo"]], 500, ""),
+    M("Spuntino pre-wo", [["seitan", Q.seitan, "piastra"], ["patDolci", Q.patDolci, "microonde"], ["broccoli", Q.broccoli, "padella"], ["olio", 6, "crudo"]], 400, ""),
+    M("Cena", [["tofuAff", Q.tofuAff, "piastra"], ["riso", 50, "pentola"], ["spinaci", Q.spinaci, "padella"], ["olio", 12, "crudo"]], 500, ""),
+    M("Pre-nanna", [["quark", Q.quark, "crudo"], ["fragole", Q.fragole, "crudo"]], 200, "")
+  ]};
+
+  const DEPL1 = { label: "DEPLEZIONE 1", cls: "base", meals: [
+    COL,
+    M("Spuntino", [["wheyIso", Q.wheyIso, "crudo"], ["greco", Q.greco, "crudo"], ["albume", Q.albume, "crudo"], ["olio", 5, "crudo"]], 300, ""),
+    M("Pranzo", [["merluzzo", Q.merluzzo, "vapore"], ["riso", 50, "pentola"], ["zucchine", 250, "padella"], ["olio", 10, "crudo"]], 500, ""),
+    M("Spuntino pre-wo", [["seitan", Q.seitan, "piastra"], ["patDolci", 50, "microonde"], ["broccoli", 200, "padella"], ["olio", 5, "crudo"]], 400, ""),
+    M("Cena", [["tofuAff", Q.tofuAff, "piastra"], ["spinaci", 250, "padella"], ["olio", 10, "crudo"]], 500, ""),
+    M("Pre-nanna", [["quark", 150, "crudo"], ["fragole", 50, "crudo"]], 200, "")
+  ]};
+  const DEPL2 = { ...DEPL1, label: "DEPLEZIONE 2" };
+  const DEPL3 = { label: "DEPLEZIONE 3", cls: "base", meals: [
+    COL,
+    M("Spuntino", [["wheyIso", Q.wheyIso, "crudo"], ["greco", Q.greco, "crudo"], ["albume", Q.albume, "crudo"], ["olio", 5, "crudo"]], 300, ""),
+    M("Pranzo", [["merluzzo", Q.merluzzo, "vapore"], ["riso", 40, "pentola"], ["zucchine", 250, "padella"], ["olio", 8, "crudo"]], 500, ""),
+    M("Spuntino pre-wo", [["seitan", Q.seitan, "piastra"], ["patDolci", 40, "microonde"], ["broccoli", 200, "padella"], ["olio", 5, "crudo"]], 400, ""),
+    M("Cena", [["tofuAff", Q.tofuAff, "piastra"], ["spinaci", 250, "padella"], ["olio", 8, "crudo"]], 500, ""),
+    M("Pre-nanna", [["quark", 150, "crudo"], ["fragole", 50, "crudo"]], 200, "")
+  ]};
+  const CARB1 = { label: "CARB-LOAD 1", cls: "base", meals: [
+    COL,
+    M("Spuntino", [["whey", 30, "crudo"], ["avena", 60, "pentola"], ["soiaDrink", 250, "crudo"], ["miele", 15, "crudo"]], 300, ""),
+    M("Pranzo", [["merluzzo", 150, "vapore"], ["riso", 250, "pentola"], ["zucchine", 150, "padella"], ["olio", 5, "crudo"]], 500, ""),
+    M("Spuntino pre-wo", [["seitan", 100, "piastra"], ["patate", 250, "microonde"], ["olio", 5, "crudo"]], 400, ""),
+    M("Cena", [["salmone", 100, "piastra"], ["riso", 150, "pentola"], ["carote", 150, "padella"], ["olio", 5, "crudo"]], 500, ""),
+    M("Pre-nanna", [["banana", 150, "crudo"], ["greco", 150, "crudo"]], 200, "")
+  ]};
+  const CARB2 = { label: "CARB-LOAD 2", cls: "base", meals: [
+    COL,
+    M("Spuntino", [["whey", 30, "crudo"], ["avena", 50, "pentola"], ["soiaDrink", 200, "crudo"], ["miele", 10, "crudo"]], 300, ""),
+    M("Pranzo", [["merluzzo", 150, "vapore"], ["riso", 180, "pentola"], ["zucchine", 150, "padella"], ["olio", 5, "crudo"]], 500, ""),
+    M("Spuntino pre-wo", [["seitan", 100, "piastra"], ["patate", 200, "microonde"], ["olio", 5, "crudo"]], 400, ""),
+    M("Cena", [["salmone", 100, "piastra"], ["riso", 120, "pentola"], ["carote", 150, "padella"], ["olio", 5, "crudo"]], 500, ""),
+    M("Pre-nanna", [["banana", 120, "crudo"], ["greco", 120, "crudo"]], 200, "")
+  ]};
+  const FINALE = { label: "FINAL TOUCH", cls: "base", meals: [
+    COL,
+    M("Spuntino", [["wheyIso", 30, "crudo"], ["greco", 150, "crudo"], ["albume", 100, "crudo"], ["olio", 5, "crudo"]], 300, ""),
+    M("Pranzo", [["merluzzo", 200, "vapore"], ["riso", 100, "pentola"], ["zucchine", 200, "padella"], ["olio", 8, "crudo"]], 500, ""),
+    M("Spuntino pre-wo", [["galRiso", 40, "crudo"], ["seitan", 100, "piastra"], ["olio", 5, "crudo"]], 400, ""),
+    M("Cena", [["tofuAff", 120, "piastra"], ["spinaci", 200, "padella"], ["olio", 8, "crudo"]], 500, ""),
+    M("Pre-nanna", [["quark", 100, "crudo"], ["fragole", 80, "crudo"]], 200, "")
+  ]};
+  const GARA = { label: "GARA", cls: "base", meals: [
+    COL,
+    M("Spuntino", [["wheyIso", 20, "crudo"], ["greco", 100, "crudo"]], 100, "Solo liquidi pre-palco"),
+    M("Pranzo", [["riso", 80, "pentola"], ["banana", 100, "crudo"], ["miele", 10, "crudo"]], 200, "Carbo rapidi pre-palco"),
+    M("Spuntino pre-wo", [], 0, "Solo sorsate acqua"),
+    M("Cena", [], 0, "Post-gara: libera"),
+    M("Pre-nanna", [], 0, "")
+  ]};
+
+  const planMap = {
+    "2026-10-18": BASELINE, "2026-10-19": BASELINE, "2026-10-20": BASELINE,
+    "2026-10-21": BASELINE, "2026-10-22": BASELINE, "2026-10-23": BASELINE,
+    "2026-10-24": BASELINE, "2026-10-25": BASELINE, "2026-10-26": BASELINE,
+    "2026-10-27": BASELINE, "2026-10-28": BASELINE, "2026-10-29": BASELINE,
+    "2026-10-30": BASELINE, "2026-10-31": BASELINE,
+    "2026-11-01": BASELINE, "2026-11-02": BASELINE, "2026-11-03": BASELINE,
+    "2026-11-04": BASELINE, "2026-11-05": BASELINE, "2026-11-06": BASELINE,
+    "2026-11-07": BASELINE, "2026-11-08": BASELINE,
+    "2026-11-09": DEPL1, "2026-11-10": DEPL2, "2026-11-11": DEPL3,
+    "2026-11-12": CARB1, "2026-11-13": CARB2, "2026-11-14": FINALE, "2026-11-15": GARA
+  };
+
+  function mealTotals(m) {
+    let kc=0, P=0, C=0, F=0, K=0, Mg=0, Na=0, H=0;
+    m.items.forEach(([f,q,c]) => {
+      const d = DB[f]; if (!d) return;
+      const mult = q/100;
+      kc += (d.C*4 + d.P*4 + d.F*9) * mult;
+      P  += d.P * mult; C  += d.C * mult; F  += d.F * mult;
+      K  += (d.K||0) * mult; Mg += (d.Mg||0) * mult; Na += (d.Na||0) * mult; H  += (d.H||0) * mult;
+    });
+    return { kc: Math.round(kc), P: Math.round(P*10)/10, C: Math.round(C*10)/10, F: Math.round(F*10)/10, K: Math.round(K), Mg: Math.round(Mg), Na: Math.round(Na), H: Math.round(H) };
+  }
+
+  function saveDay(iso, plan) {
+    const t = { label: plan.label, meals: plan.meals.map(m => ({...m})), iso, cls: plan.cls };
+    const obj = getObj(); scaleToObj(t); scaleWaterSalt(t, obj);
+    for (let mi=0; mi<8; mi++) {
+      localStorage.removeItem("mod6_"+iso+"_"+mi);
+      localStorage.removeItem("wm_"+iso+"_"+mi);
+      localStorage.removeItem("sm_"+iso+"_"+mi);
+      localStorage.removeItem("prep_"+iso+"_"+mi);
+      for (let ix=0; ix<10; ix++) localStorage.removeItem("supp_"+iso+"_"+mi+"_"+ix);
+    }
+    localStorage.removeItem("b_"+iso); localStorage.removeItem("empty_"+iso); localStorage.removeItem("w_"+iso);
+    t.meals.forEach((m, mi) => {
+      const v = mealTotals(m);
+      store("mod6_"+iso+"_"+mi, JSON.stringify({ items: m.items, locks: m.items.map(()=>false), base: { kc: v.kc, K: v.K, Mg: v.Mg, Na: v.Na } }));
+      if (m.water) store("wm_"+iso+"_"+mi, "0");
+    });
+    localStorage.removeItem("empty_"+iso); touch();
+  }
+
+  store("obiettivi", JSON.stringify({ kcal: 1750, P: 195, F: 50, water: 4.5, sale: 5.5 }));
+  Object.entries(planMap).forEach(([iso, plan]) => saveDay(iso, plan));
+  if (typeof renderCal === "function") renderCal();
+  alert("✅ Piano caricato! Apri le date sul calendario.");
+}
+
+function impData(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);Object.keys(d).forEach(k=>{if(d[k]!=null)store(k,d[k])});touch();alert("Ripristinato OK");if(cur)openDay(new Date(cur.iso+"T12:00:00"));else renderCal()}catch(e){alert("File non valido")}};r.readAsText(f);inp.value=""}function suppRows(m,mi){let h="",ix=0;
  (m.supp||"").split("·").forEach(t=>{t=t.trim();if(!t)return;const hasIc=/^[^\x00-\x7F]/.test(t);const ic=hasIc?"":(/tisana/i.test(t)?"🍵":(/caff|decaf/i.test(t)?"☕":"💊"));h+=`<tr data-suppitem="${mi},${ix}"><td colspan="5">${ic?ic+" ":""}${t}</td></tr>`;ix++});
  const kio=m.items.find(it=>it[0]==="kio"),mgio=m.items.find(it=>it[0]==="mgio");
  if(kio)h+=`<tr data-suppitem="${mi},K"><td colspan="5">💊 ${DB.kio.n} · ${kio[1]}cpr</td></tr>`;
