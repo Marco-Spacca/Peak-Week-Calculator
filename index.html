@@ -442,7 +442,7 @@ function openDay(d){cur=d;const p=getPlan(d);
   const items0=(lm&&lm.items&&lm.items.length)?lm.items.filter(it=>DB[it[0]]&&it[0]!=="kio"&&it[0]!=="mgio"&&it[0]!=="kcit"&&it[0]!=="mgbi"):[];
   const items=items0.length?items0:JSON.parse(JSON.stringify(m.items));
   const mo={...m,items,target:bt.kc,baseK:bt.K,baseMg:bt.Mg,baseNa:bt.Na,locks:(lm.locks&&lm.locks.length===items.length)?lm.locks:items.map(()=>false),myBase:lm.base||null};autoSupp(mo);return mo});
- distributeNa(p);distributeWater(p);capKDay(p);cur=p;document.getElementById('cal').style.display='none';const hb=document.getElementById('homeBtns');if(hb)hb.style.display='none';fbListenDay(p.iso);
+ distributeNa(p);distributeWater(p);capKDay(p);cur=p;document.getElementById('cal').style.display='none';const hb=document.getElementById('homeBtns');if(hb)hb.style.display='none';
  const s=document.getElementById('sheet');s.style.display='block';
  s.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%"><button onclick="stepDay(-1)">◀</button><div id="dayhead" style="flex:1;text-align:center"></div><button onclick="stepDay(1)">▶</button></div>
  <div class="tabs">${["Dieta","Idratazione","Dati corporei"].map((t,i)=>`<div class="tab${i===0?' on':''}" data-t="${t}">${t}</div>`).join('')}</div><div id="pane"></div>`;
