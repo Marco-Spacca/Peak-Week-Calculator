@@ -13,12 +13,11 @@ firebase.initializeApp(firebaseConfig);
 const FS=firebase.firestore();
 let syncing=false;
 function fbPushDay(iso){if(syncing)return;try{const o={v:Date.now(),lastMod:read("lastMod")||null};
- for(let mi=0;mi<8;mi++){const w=read("wm_"+iso+"_"+mi),s=read("sm_"+iso+"_"+mi),p=read("prep_"+iso+"_"+mi),u=read("supp_"+iso+"_"+mi);if(w!=null)o["wm_"+iso+"_"+mi]=w;if(s!=null)o["sm_"+iso+"_"+mi]=s;if(p!=null)o["prep_"+iso+"_"+mi]=JSON.parse(p);if(u!=null)o["supp_"+iso+"_"+mi]=JSON.parse(u)}
- for(let mi=0;mi<8;mi++){const k=modKey(iso,mi);if(read(k)!=null)o["mod6_"+iso+"_"+mi]=JSON.parse(read(k))}
+ for(let mi=0;mi<8;mi++){const w=read("wm_"+iso+"_"+mi),s=read("sm_"+iso+"_"+mi),p=read("prep_"+iso+"_"+mi),u=read("supp_"+iso+"_"+mi);if(w!=null)o["wm_"+iso+"_"+mi]=w;if(s!=null)o["sm_"+iso+"_"+mi]=s;if(p!=null)o["prep_"+iso+"_"+mi]=p;if(u!=null)o["supp_"+iso+"_"+mi]=u;const m=read(modKey(iso,mi));if(m!=null)o["mod6_"+iso+"_"+mi]=m}
  o["b_"+iso]=read("b_"+iso);o["empty_"+iso]=read("empty_"+iso);
  FS.collection("days").doc(iso).set(o)}catch(e){console.error("fbPushDay",e)}}
 function fbListenDay(iso){try{FS.collection("days").doc(iso).onSnapshot(snap=>{if(!snap.exists||syncing)return;const r=snap.data();const lt=+read("lastModTs")||0;if(r.v>lt){syncing=true;try{
- for(let mi=0;mi<8;mi++){const w=r["wm_"+iso+"_"+mi];if(w!=null)store("wm_"+iso+"_"+mi,String(w));const s=r["sm_"+iso+"_"+mi];if(s!=null)store("sm_"+iso+"_"+mi,String(s));const p=r["prep_"+iso+"_"+mi];if(p!=null)store("prep_"+iso+"_"+mi,JSON.stringify(p));const u=r["supp_"+iso+"_"+mi];if(u!=null)store("supp_"+iso+"_"+mi,JSON.stringify(u));const m=r["mod6_"+iso+"_"+mi];if(m!=null)store(modKey(iso,mi),JSON.stringify(m))}
+ for(let mi=0;mi<8;mi++){const w=r["wm_"+iso+"_"+mi];if(w!=null)store("wm_"+iso+"_"+mi,String(w));const s=r["sm_"+iso+"_"+mi];if(s!=null)store("sm_"+iso+"_"+mi,String(s));const p=r["prep_"+iso+"_"+mi];if(p!=null)store("prep_"+iso+"_"+mi,typeof p==="string"?p:JSON.stringify(p));const u=r["supp_"+iso+"_"+mi];if(u!=null)store("supp_"+iso+"_"+mi,typeof u==="string"?u:JSON.stringify(u));const m=r["mod6_"+iso+"_"+mi];if(m!=null)store(modKey(iso,mi),typeof m==="string"?m:JSON.stringify(m))}
  if(r["b_"+iso]!=null)store("b_"+iso,r["b_"+iso]);if(r["empty_"+iso]!=null)store("empty_"+iso,r["empty_"+iso]);if(r.lastMod!=null)store("lastMod",r.lastMod);store("lastModTs",String(r.v))}catch(e){console.error("[LISTEN ERR]",e)}syncing=false;if(cur&&cur.iso===iso)openDay(new Date(iso+"T12:00:00"))}})}catch(e){console.error("[LISTEN START ERR]",e)}}
 </script>
 
