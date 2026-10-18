@@ -16,9 +16,9 @@ function fbPushDay(iso){if(syncing)return;try{const o={v:+read("lastModTs")||Dat
  for(let mi=0;mi<8;mi++){const w=read("wm_"+iso+"_"+mi),s=read("sm_"+iso+"_"+mi),p=read("prep_"+iso+"_"+mi),u=read("supp_"+iso+"_"+mi);if(w!=null)o["wm_"+iso+"_"+mi]=w;if(s!=null)o["sm_"+iso+"_"+mi]=s;if(p!=null)o["prep_"+iso+"_"+mi]=p;if(u!=null)o["supp_"+iso+"_"+mi]=u;const m=read(modKey(iso,mi));if(m!=null)o["mod6_"+iso+"_"+mi]=m}
  o["b_"+iso]=read("b_"+iso);o["empty_"+iso]=read("empty_"+iso);
  FS.collection("days").doc(iso).set(o)}catch(e){console.error("fbPushDay",e)}}
-function fbListenDay(iso){try{if(fbUn){fbUn();fbUn=null}fbUn=FS.collection("days").doc(iso).onSnapshot(snap=>{if(!snap.exists||syncing)return;const r=snap.data();const lt=+read("lastModTs")||0;if(r.v>lt){syncing=true;try{
- for(let mi=0;mi<8;mi++){const w=r["wm_"+iso+"_"+mi];if(w!=null)store("wm_"+iso+"_"+mi,String(w));const s=r["sm_"+iso+"_"+mi];if(s!=null)store("sm_"+iso+"_"+mi,String(s));const p=r["prep_"+iso+"_"+mi];if(p!=null)store("prep_"+iso+"_"+mi,typeof p==="string"?p:JSON.stringify(p));const u=r["supp_"+iso+"_"+mi];if(u!=null)store("supp_"+iso+"_"+mi,typeof u==="string"?u:JSON.stringify(u));const m=r["mod6_"+iso+"_"+mi];if(m!=null)store(modKey(iso,mi),typeof m==="string"?m:JSON.stringify(m))}
- if(r["b_"+iso]!=null)store("b_"+iso,r["b_"+iso]);if(r["empty_"+iso]!=null)store("empty_"+iso,r["empty_"+iso]);if(r.lastMod!=null)store("lastMod",r.lastMod);store("lastModTs",String(r.v))}catch(e){console.error("[LISTEN ERR]",e)}syncing=false;if(cur&&cur.iso===iso)openDay(new Date(iso+"T12:00:00"))}})}catch(e){console.error("[LISTEN START ERR]",e)}}
+function fbListenDay(iso){try{if(fbUn){fbUn();fbUn=null}fbUn=FS.collection("days").doc(iso).onSnapshot(snap=>{if(!snap.exists||syncing)return;const r=snap.data();const lt=+read("lastModTs")||0;if(r.v>lt){syncing=true;let chg=false;const put=(k,v)=>{if(v==null)return;if(typeof v!=="string")v=JSON.stringify(v);if(read(k)!==v){store(k,v);chg=true}};try{
+ for(let mi=0;mi<8;mi++){put("wm_"+iso+"_"+mi,r["wm_"+iso+"_"+mi]);put("sm_"+iso+"_"+mi,r["sm_"+iso+"_"+mi]);put("prep_"+iso+"_"+mi,r["prep_"+iso+"_"+mi]);put("supp_"+iso+"_"+mi,r["supp_"+iso+"_"+mi]);put(modKey(iso,mi),r["mod6_"+iso+"_"+mi])}
+ put("b_"+iso,r["b_"+iso]);put("empty_"+iso,r["empty_"+iso]);if(r.lastMod!=null&&read("lastMod")!==String(r.lastMod)){store("lastMod",r.lastMod);chg=true}store("lastModTs",String(r.v))}catch(e){console.error("[LISTEN ERR]",e)}syncing=false;if(chg&&cur&&cur.iso===iso)openDay(new Date(iso+"T12:00:00"))}})}catch(e){console.error("[LISTEN START ERR]",e)}}
 </script>
 
 <title>Road to Stage — TCG</title>
@@ -154,7 +154,7 @@ mgio:{n:"Magnesio IO.Genix",unit:"cpr",C:0,P:0,F:0,Na:0,K:0,Mg:103.5,H:0,g:"supM
 };
 const COOK={crudo:["Crudo/a",1,1],sciacquato:["Sciacquato",1,1],pentola:["Pentola (assorbe)",.9,1],vapore:["Vapore",.95,.95],padella:["Padella coperchio",.9,.85],piastra:["Piastra",.9,.8],forno:["Forno",.9,.85],microonde:["Microonde",.95,.95]};
 const MAX={riso:150,polenta:150,quinoa:150,gnocchi:300,patate:500,patDolci:500,zucca:400,galRiso:100,galMais:100,konjac:400,ceci:250,merluzzo:400,sogliola:400,platessa:400,nasello:400,persico:400,orata:400,spada:400,tonnoF:300,salmone:300,sgombro:250,gamberi:350,cozze:400,calamari:350,albume:400,uovo:200,skyr:300,greco:300,quark:300,fiocchi:250,ricotta:250,grana:60,olio:20,cocco:10,mandorle:60,noci:60,pistacchi:40,semiZucca:20,avocado:200,ciocc:25,budino:200,misura:60,banana:300,fragole:200,mirtilli:200,spinaci:400,zucchine:400,asparagi:300,bieta:300,broccoli:400,funghi:300,lattuga:200,cappuccio:250,carote:250,barba:200,rucola:200,salsaYo:100,senape:15,sale:10,miele:30,whey:60,wheyIso:60,kio:3,mgio:3,avena:80,salsaSoia:15,tempeh:200,seitan:200,soiaDrink:300,heroLight:30,ketchup:30,tofuAff:250,fusLatt:60,ciocc74:30,kefir:300};
-const VERSION="3.4.2";
+const VERSION="3.4.3";
 const sc=v=>Math.round(v*10)/10;
 const FOODCLS={};["merluzzo","sogliola","platessa","nasello","persico","orata","spada","tonnoF","salmone","sgombro","gamberi","cozze","calamari","albume","skyr","greco","quark","fiocchi","ricotta","kefir","whey","wheyIso","tempeh","seitan","tofuAff","budino"].forEach(k=>FOODCLS[k]="P");
 ["olio","cocco","mandorle","noci","pistacchi","semiZucca","avocado","ciocc","ciocc74","grana","uovo","fusLatt"].forEach(k=>FOODCLS[k]="F");
@@ -276,7 +276,9 @@ function paintMeta(){let s="mai";
 function closeOv(){document.getElementById("ovl").style.display="none"}
 
 function togSet(){const n=Date.now();if(n-(togSet.t||0)<400)return;togSet.t=n;const m=document.getElementById('setMenu');if(m)m.classList.toggle('open')}
-document.addEventListener('click',e=>{const m=document.getElementById('setMenu');if(!m||!m.classList.contains('open'))return;if(Date.now()-(togSet.t||0)<500)return;const t=e.target;if(!m.contains(t)&&!(t.closest&&t.closest('#gearBtn')))m.classList.remove('open')});
+document.addEventListener('click',e=>{const t=e.target;const m=document.getElementById('setMenu');
+ if(m&&m.classList.contains('open')&&Date.now()-(togSet.t||0)>=500&&!m.contains(t)&&!(t.closest&&t.closest('#gearBtn')))m.classList.remove('open');
+ document.querySelectorAll('[data-addmenu]').forEach(x=>{if(x.style.display==='block'&&!x.contains(t)&&!(t.closest&&t.closest('[data-addsel]')))x.style.display='none'})});
 function openObj(){const o=getObj();
  document.getElementById("ovlBox").innerHTML=`<h2>🎯 Obiettivi (giorni CUT)</h2>
  <label>Kcal giornaliere <input class="txt" id="o_k" type="number" value="${o.kcal}" oninput="updObj('o_k')"></label>
@@ -704,8 +706,7 @@ document.getElementById('sheet').addEventListener('touchstart',e=>{const t=e.cha
 document.getElementById('sheet').addEventListener('touchend',e=>{if(tx0==null||!cur)return;const t=e.changedTouches[0],dx=t.clientX-tx0,dy=t.clientY-ty0;tx0=null;if(dx>60&&Math.abs(dy)<40){const d=e.target.closest('[data-drag]');if(d){const p=d.dataset.drag.split(',');togDone(+p[0],+p[1])}else{const s=e.target.closest('[data-suppitem]');if(s){const p=s.dataset.suppitem.split(',');togSuppItem(p[0],p[1])}}}},{passive:true});
 document.getElementById('sheet').addEventListener('focusin',e=>{const s=e.target.closest('[data-addsel]');if(s&&cur)renderAddMenu(+s.dataset.addsel,s.value)});
 document.getElementById('sheet').addEventListener('input',e=>{const s=e.target.closest('[data-addsel]');if(s&&cur)renderAddMenu(+s.dataset.addsel,s.value)});
-document.getElementById('sheet').addEventListener('pointerdown',e=>{const o=e.target.closest('[data-addopt]');if(o&&cur){const p=o.dataset.addopt.split('|');addFoodToMeal(+p[0],DB[p[1]].n)}});
-document.getElementById('sheet').addEventListener('focusout',e=>{const s=e.target.closest('[data-addsel]');if(s)setTimeout(()=>{const mm=document.querySelector(`[data-addmenu="${s.dataset.addsel}"]`);if(mm)mm.style.display='none'},500)});
+document.getElementById('sheet').addEventListener('keydown',e=>{const s=e.target.closest('[data-addsel]');if(!s||e.key!=='Enter')return;const mm=document.querySelector(`[data-addmenu="${s.dataset.addsel}"]`);if(mm)mm.style.display='none'});
 let dragFrom=null;
 document.getElementById('sheet').addEventListener('dragstart',e=>{const d=e.target.closest('[data-drag]');if(d&&cur){const p=d.dataset.drag.split(',');dragFrom={mi:+p[0],ii:+p[1]};try{e.dataTransfer.effectAllowed='move'}catch(x){}}});
 document.getElementById('sheet').addEventListener('dragover',e=>{if(dragFrom&&e.target.closest('[data-drag]'))e.preventDefault()});
