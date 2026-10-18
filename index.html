@@ -154,7 +154,7 @@ mgio:{n:"Magnesio IO.Genix",unit:"cpr",C:0,P:0,F:0,Na:0,K:0,Mg:103.5,H:0,g:"supM
 };
 const COOK={crudo:["Crudo/a",1,1],sciacquato:["Sciacquato",1,1],pentola:["Pentola (assorbe)",.9,1],vapore:["Vapore",.95,.95],padella:["Padella coperchio",.9,.85],piastra:["Piastra",.9,.8],forno:["Forno",.9,.85],microonde:["Microonde",.95,.95]};
 const MAX={riso:150,polenta:150,quinoa:150,gnocchi:300,patate:500,patDolci:500,zucca:400,galRiso:100,galMais:100,konjac:400,ceci:250,merluzzo:400,sogliola:400,platessa:400,nasello:400,persico:400,orata:400,spada:400,tonnoF:300,salmone:300,sgombro:250,gamberi:350,cozze:400,calamari:350,albume:400,uovo:200,skyr:300,greco:300,quark:300,fiocchi:250,ricotta:250,grana:60,olio:20,cocco:10,mandorle:60,noci:60,pistacchi:40,semiZucca:20,avocado:200,ciocc:25,budino:200,misura:60,banana:300,fragole:200,mirtilli:200,spinaci:400,zucchine:400,asparagi:300,bieta:300,broccoli:400,funghi:300,lattuga:200,cappuccio:250,carote:250,barba:200,rucola:200,salsaYo:100,senape:15,sale:10,miele:30,whey:60,wheyIso:60,kio:3,mgio:3,avena:80,salsaSoia:15,tempeh:200,seitan:200,soiaDrink:300,heroLight:30,ketchup:30,tofuAff:250,fusLatt:60,ciocc74:30,kefir:300};
-const VERSION="3.3.5";
+const VERSION="3.3.6";
 const sc=v=>Math.round(v*10)/10;
 const FOODCLS={};["merluzzo","sogliola","platessa","nasello","persico","orata","spada","tonnoF","salmone","sgombro","gamberi","cozze","calamari","albume","skyr","greco","quark","fiocchi","ricotta","kefir","whey","wheyIso","tempeh","seitan","tofuAff","budino"].forEach(k=>FOODCLS[k]="P");
 ["olio","cocco","mandorle","noci","pistacchi","semiZucca","avocado","ciocc","ciocc74","grana","uovo","fusLatt"].forEach(k=>FOODCLS[k]="F");
@@ -274,8 +274,8 @@ function paintMeta(){let s="mai";
  try{const v=read("lastMod");if(v)s=new Date(v).toLocaleString("it",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"})}catch(e){}
  document.getElementById("syncDot").nextElementSibling.textContent="versione "+VERSION+" · Ultima mod: "+s;const d=document.getElementById("syncDot");if(d){try{d.style.background=FS?"#2ecc71":"#e74c3c"}catch(e){d.style.background="#e74c3c"}}}
 function closeOv(){document.getElementById("ovl").style.display="none"}
-document.getElementById('setMenu').addEventListener('click',(e)=>{if(e.target.tagName==="BUTTON"||e.target.closest("button"))return;document.getElementById('setMenu').classList.remove('open')});
-function togSet(){const m=document.getElementById('setMenu');if(m)m.classList.toggle('open');document.getElementById('ovl').style.display='none'}
+document.getElementById('setMenu').addEventListener('click',(e)=>{const t=e.target;if(t.tagName==='BUTTON'||t.closest('button')||t.tagName==='INPUT'||t.tagName==='SELECT'||t.closest('input,select,button'))return;document.getElementById('setMenu').classList.remove('open')});
+function togSet(){const m=document.getElementById('setMenu');if(m)m.classList.toggle('open');}
 function openObj(){const o=getObj();
  document.getElementById("ovlBox").innerHTML=`<h2>🎯 Obiettivi (giorni CUT)</h2>
  <label>Kcal giornaliere <input class="txt" id="o_k" type="number" value="${o.kcal}" oninput="updObj('o_k')"></label>
