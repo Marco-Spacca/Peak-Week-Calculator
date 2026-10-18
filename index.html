@@ -5,6 +5,19 @@
 <meta name="theme-color" content="#0d0f1a">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig={apiKey:"AIzaSyBEqOUtBAWhBsJBHI_zQPLryGnZDS5A5yQ",authDomain:"peakweek-calculator.firebaseapp.com",databaseURL:"https://peakweek-calculator-default-rtdb.europe-west1.firebasedatabase.app",projectId:"peakweek-calculator",storageBucket:"peakweek-calculator.firebasestorage.app",messagingSenderId:"565783357291",appId:"1:565783357291:web:c342fde7955d1e56968e2e"};
+firebase.initializeApp(firebaseConfig);
+const DB=firebase.database();
+let syncing=false;
+function fbPushDay(iso){if(syncing)return;try{const o={v:Date.now(),lastMod:read("lastMod")||null};["mod6_","wm_","sm_","prep_","supp_","b_","empty_"].forEach(p=>{o[p]=read(p+iso)});DB.ref("peakweek/"+iso).set(o)}catch(e){}}
+function fbListenDay(iso){try{DB.ref("peakweek/"+iso).on("value",snap=>{const r=snap.val();if(!r||syncing)return;const lt=+read("lastModTs")||0;if(r.v>lt){syncing=true;try{if(r["mod6_"]!=null)store("mod6_"+iso,r["mod6_"]);for(let mi=0;mi<8;mi++){const asObj=a=>a&&typeof a==="object"&&!Array.isArray(a)?a:(a?Array.isArray(a)?Object.fromEntries(a.map((v,i)=>[i,v])):{});
+ const wm=asObj(r["wm_"]),sm=asObj(r["sm_"]),pp=asObj(r["prep_"]),sp=asObj(r["supp_"]);
+ for(let mi=0;mi<8;mi++){if(wm&&wm[mi]!=null)store("wm_"+iso+"_"+mi,String(wm[mi]));if(sm&&sm[mi]!=null)store("sm_"+iso+"_"+mi,String(sm[mi]));if(pp&&pp[mi]!=null)store("prep_"+iso+"_"+mi,pp[mi]);if(sp&&sp[mi]!=null)store("supp_"+iso+"_"+mi,sp[mi])}}if(r["empty_"]!=null)store("empty_"+iso,r["empty_"]);if(r["b_"]!=null)store("b_"+iso,r["b_"]);if(r.lastMod!=null)store("lastMod",r.lastMod);store("lastModTs",String(r.v))}catch(e){}syncing=false;if(cur&&cur.iso===iso)openDay(new Date(iso+"T12:00:00"))}})}catch(e){}}
+function touch(){store("lastMod",new Date().toISOString());store("lastModTs",String(Date.now()));paintMeta();if(cur)fbPushDay(cur.iso)}
+</script>
 <title>Road to Stage — TCG</title>
 <style>
 :root{--gold:#ffd60a}*{box-sizing:border-box}
@@ -441,7 +454,7 @@ function openDay(d){cur=d;const p=getPlan(d);
   const items0=(lm&&lm.items&&lm.items.length)?lm.items.filter(it=>DB[it[0]]&&it[0]!=="kio"&&it[0]!=="mgio"&&it[0]!=="kcit"&&it[0]!=="mgbi"):[];
   const items=items0.length?items0:JSON.parse(JSON.stringify(m.items));
   const mo={...m,items,target:bt.kc,baseK:bt.K,baseMg:bt.Mg,baseNa:bt.Na,locks:(lm.locks&&lm.locks.length===items.length)?lm.locks:items.map(()=>false),myBase:lm.base||null};autoSupp(mo);return mo});
- distributeNa(p);distributeWater(p);capKDay(p);cur=p;document.getElementById('cal').style.display='none';const hb=document.getElementById('homeBtns');if(hb)hb.style.display='none';
+ distributeNa(p);distributeWater(p);capKDay(p);cur=p;document.getElementById('cal').style.display='none';const hb=document.getElementById('homeBtns');if(hb)hb.style.display='none';fbListenDay(p.iso);
  const s=document.getElementById('sheet');s.style.display='block';
  s.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%"><button onclick="stepDay(-1)">◀</button><div id="dayhead" style="flex:1;text-align:center"></div><button onclick="stepDay(1)">▶</button></div>
  <div class="tabs">${["Dieta","Idratazione","Dati corporei"].map((t,i)=>`<div class="tab${i===0?' on':''}" data-t="${t}">${t}</div>`).join('')}</div><div id="pane"></div>`;
