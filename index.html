@@ -17,7 +17,7 @@ function fbFlush(){fbT=null;fbLastAt=Date.now();
  const iso=Array.from(fbDirty)[0];
  try{const o={v:+read("lastModTs")||Date.now(),lastMod:read("lastMod")||null};
   for(let mi=0;mi<8;mi++){const w=read("wm_"+iso+"_"+mi),s=read("sm_"+iso+"_"+mi),p=read("prep_"+iso+"_"+mi),u=read("supp_"+iso+"_"+mi);if(w!=null)o["wm_"+iso+"_"+mi]=w;if(s!=null)o["sm_"+iso+"_"+mi]=s;if(p!=null)o["prep_"+iso+"_"+mi]=p;if(u!=null)o["supp_"+iso+"_"+mi]=u;const m=read(modKey(iso,mi));if(m!=null)o["mod6_"+iso+"_"+mi]=m}
-  o["b_"+iso]=read("b_"+iso);o["empty_"+iso]=read("empty_"+iso);
+  o["b_"+iso]=read("b_"+iso);o["empty_"+iso]=read("empty_"+iso);const cfread=read("customFoods");if(cfread)o.customFoods=cfread;
   fbPend=FS.collection("days").doc(iso).set(o).then(()=>{fbDirty.delete(iso)}).catch(e=>{console.error("fbPushDay",e)}).then(()=>{fbPend=null;if(fbDirty.size)fbPushDay(iso)})}
  catch(e){console.error("fbPushDay",e);fbPend=null}}
 function fbPushDay(iso){if(syncing||!iso)return;fbDirty.add(iso);if(fbT||fbPend)return;
@@ -26,6 +26,12 @@ addEventListener('pagehide',()=>{if(fbDirty.size)fbFlush()});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&fbDirty.size)fbFlush()});
 function fbListenDay(iso){try{if(fbUn){fbUn();fbUn=null}fbUn=FS.collection("days").doc(iso).onSnapshot(snap=>{if(!snap.exists||syncing)return;const r=snap.data();const lt=+read("lastModTs")||0;if(r.v>lt){syncing=true;let chg=false;const put=(k,v)=>{if(v==null)return;if(typeof v!=="string")v=JSON.stringify(v);if(read(k)!==v){store(k,v);chg=true}};try{
  for(let mi=0;mi<8;mi++){put("wm_"+iso+"_"+mi,r["wm_"+iso+"_"+mi]);put("sm_"+iso+"_"+mi,r["sm_"+iso+"_"+mi]);put("prep_"+iso+"_"+mi,r["prep_"+iso+"_"+mi]);put("supp_"+iso+"_"+mi,r["supp_"+iso+"_"+mi]);put(modKey(iso,mi),r["mod6_"+iso+"_"+mi])}
+ if(typeof r.customFoods==="string"){let cfL=[],cfR=[];
+  try{cfL=JSON.parse(read("customFoods")||"[]")}catch(e){}
+  try{cfR=JSON.parse(r.customFoods)}catch(e){}
+  if(cfR.length){const map={};cfL.forEach(c=>{if(c)map[c.key]=map[c.key]||c});cfR.forEach(c=>{if(c)map[c.key]=c});
+   const cfStr=JSON.stringify(Object.values(map));
+   if(read("customFoods")!==cfStr){store("customFoods",cfStr);loadCustom();chg=true}}}
  put("b_"+iso,r["b_"+iso]);put("empty_"+iso,r["empty_"+iso]);if(r.lastMod!=null&&read("lastMod")!==String(r.lastMod)){store("lastMod",r.lastMod);chg=true}store("lastModTs",String(r.v))}catch(e){console.error("[LISTEN ERR]",e)}syncing=false;if(chg&&cur&&cur.iso===iso)openDay(new Date(iso+"T12:00:00"))}})}catch(e){console.error("[LISTEN START ERR]",e)}}
 </script>
 
@@ -162,7 +168,7 @@ couscous:{n:"Cous cous",C:77,P:12.8,F:.6,Na:46,K:58,Mg:8,H:12,g:"carb"},
 mgio:{n:"Magnesio IO.Genix",unit:"cpr",C:0,P:0,F:0,Na:0,K:0,Mg:103.5,H:0,g:"supMg"},
 };
 const COOK={crudo:["Crudo/a",1,1],sciacquato:["Sciacquato",1,1],pentola:["Pentola (assorbe)",.9,1],vapore:["Vapore",.95,.95],padella:["Padella coperchio",.9,.85],piastra:["Piastra",.9,.8],forno:["Forno",.9,.85],microonde:["Microonde",.95,.95]};
-const VERSION="3.6.0";
+const VERSION="3.6.1";
 const sc=v=>Math.round(v*10)/10;
 const FOODCLS={};["merluzzo","sogliola","platessa","nasello","persico","orata","spada","tonnoF","salmone","sgombro","gamberi","cozze","calamari","albume","skyr","greco","quark","fiocchi","ricotta","kefir","whey","wheyIso","tempeh","seitan","tofuAff","budino"].forEach(k=>FOODCLS[k]="P");
 ["olio","cocco","mandorle","noci","pistacchi","semiZucca","avocado","ciocc","ciocc74","grana","uovo","fusLatt"].forEach(k=>FOODCLS[k]="F");
@@ -280,7 +286,7 @@ function svuotaDaOggi(){const t=new Date();t.setHours(0,0,0,0);const iso=isoOf(t
   del("w_"+id);for(let mi=0;mi<8;mi++){del("wm_"+id+"_"+mi);del("sm_"+id+"_"+mi);del("prep_"+id+"_"+mi)}
   store("empty_"+id,"1")}
  touch();renderCal();if(cur)openDay(new Date(cur.iso+"T12:00:00"))}
-function touch(){store("lastMod",new Date().toISOString());store("lastModTs",String(Date.now()));paintMeta();if(cur)fbPushDay(cur.iso)}
+function touch(){store("lastMod",new Date().toISOString());store("lastModTs",String(Date.now()));paintMeta();if(cur)fbPushDay(cur.iso);else{const ld=read("lastDay");if(ld)fbPushDay(ld)}}
 function paintMeta(){let s="mai";
  try{const v=read("lastMod");if(v)s=new Date(v).toLocaleString("it",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"})}catch(e){}
  document.getElementById("syncDot").nextElementSibling.textContent="versione "+VERSION+" · Ultima mod: "+s;const d=document.getElementById("syncDot");if(d){try{d.style.background=FS?"#2ecc71":"#e74c3c"}catch(e){d.style.background="#e74c3c"}}}
@@ -451,7 +457,7 @@ function renderCal(){const c=document.getElementById('cal');c.innerHTML="";
   el.onclick=()=>openDay(dd);c.appendChild(el)}}
 function modKey(iso,mi){return 'mod6_'+iso+'_'+mi}
 function loadMeal(iso,mi,base){try{const s=JSON.parse(read(modKey(iso,mi)));if(s&&s.items)return s}catch(e){}return JSON.parse(JSON.stringify(base))}
-function openDay(d){cur=d;const p=getPlan(d);
+function openDay(d){cur=d;const p=getPlan(d);store("lastDay",p.iso);
  p.dstr=d.toLocaleDateString('it',{day:'numeric',month:'long'});
  p.meals=p.meals.map((m,mi)=>{const lm=loadMeal(p.iso,mi,m);const bt=(lm.base&&lm.base.kc!=null)?lm.base:mealTotals(m);
   const items0=(lm&&lm.items&&lm.items.length)?lm.items.filter(it=>DB[it[0]]&&it[0]!=="kio"&&it[0]!=="mgio"&&it[0]!=="kcit"&&it[0]!=="mgbi"):[];
