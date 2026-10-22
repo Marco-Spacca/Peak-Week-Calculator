@@ -147,6 +147,7 @@ sale:{n:"Sale aggiunto",C:0,P:0,F:0,Na:38700,K:0,Mg:0,H:0,g:"sale"},
 miele:{n:"Miele",C:80,P:0,F:0,Na:5,K:50,Mg:2,H:18,g:"-"},
 whey:{n:"Whey Bulk banana",C:18,P:69,F:3.4,Na:348,K:500,Mg:50,H:5,g:"-"},
 avena:{n:"Fiocchi avena Lidl",C:58.7,P:13.5,F:7,Na:8,K:350,Mg:130,H:8,g:"carb"},
+couscous:{n:"Cous cous",C:77,P:12.8,F:.6,Na:46,K:58,Mg:8,H:12,g:"carb"},
  salsaSoia:{n:"Salsa di soia Lidl",C:6.5,P:8,F:0,Na:5640,K:300,Mg:40,H:70,g:"-"},
  tempeh:{n:"Tempeh bio soia",C:3.2,P:19,F:9,Na:0,K:400,Mg:70,H:60,g:"-"},
  seitan:{n:"Seitan Vemondo",C:9.9,P:26,F:.9,Na:312,K:150,Mg:30,H:60,g:"-"},
@@ -161,7 +162,7 @@ avena:{n:"Fiocchi avena Lidl",C:58.7,P:13.5,F:7,Na:8,K:350,Mg:130,H:8,g:"carb"},
 mgio:{n:"Magnesio IO.Genix",unit:"cpr",C:0,P:0,F:0,Na:0,K:0,Mg:103.5,H:0,g:"supMg"},
 };
 const COOK={crudo:["Crudo/a",1,1],sciacquato:["Sciacquato",1,1],pentola:["Pentola (assorbe)",.9,1],vapore:["Vapore",.95,.95],padella:["Padella coperchio",.9,.85],piastra:["Piastra",.9,.8],forno:["Forno",.9,.85],microonde:["Microonde",.95,.95]};
-const VERSION="3.5.0";
+const VERSION="3.6.0";
 const sc=v=>Math.round(v*10)/10;
 const FOODCLS={};["merluzzo","sogliola","platessa","nasello","persico","orata","spada","tonnoF","salmone","sgombro","gamberi","cozze","calamari","albume","skyr","greco","quark","fiocchi","ricotta","kefir","whey","wheyIso","tempeh","seitan","tofuAff","budino"].forEach(k=>FOODCLS[k]="P");
 ["olio","cocco","mandorle","noci","pistacchi","semiZucca","avocado","ciocc","ciocc74","grana","uovo","fusLatt"].forEach(k=>FOODCLS[k]="F");
@@ -221,13 +222,13 @@ function resetFromToday(){const t=new Date();t.setHours(0,0,0,0);const iso=t.get
  for(let d=new Date(t);d<=end;d.setDate(d.getDate()+1))del("empty_"+isoOf(d));
  touch();renderCal();if(cur)openDay(new Date(cur.iso+"T12:00:00"))}
 function isoOf(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
-const GPOOL={carb:["riso","polenta","quinoa","patate","patDolci","galRiso","galMais","avena"],prot:["merluzzo","sogliola","platessa","nasello","persico","orata","spada","tonnoF","salmone","sgombro","gamberi","calamari","albume","uovo","skyr","greco","quark","fiocchi","ricotta","tempeh","seitan","tofuAff"],ver:["spinaci","zucchine","asparagi","bieta","broccoli","funghi","lattuga","cappuccio","carote","barba","rucola","zucca"],fat:["olio","mandorle","noci","pistacchi","semiZucca","avocado"],fru:["banana","fragole","mirtilli"]};
+const GPOOL={carb:["riso","polenta","quinoa","patate","patDolci","galRiso","galMais","avena","couscous"],prot:["merluzzo","sogliola","platessa","nasello","persico","orata","spada","tonnoF","salmone","sgombro","gamberi","calamari","albume","uovo","skyr","greco","quark","fiocchi","ricotta","tempeh","seitan","tofuAff"],ver:["spinaci","zucchine","asparagi","bieta","broccoli","funghi","lattuga","cappuccio","carote","barba","rucola","zucca"],fat:["olio","mandorle","noci","pistacchi","semiZucca","avocado"],fru:["banana","fragole","mirtilli"]};
 const GSWO_P=["whey","wheyIso","albume","greco","skyr","quark"],GSWO_C=["banana","galRiso","galMais","fragole","mirtilli"],GSWO_F=["mandorle","noci"];
 const FISH=new Set(["magro","medio","grasso","mare"]);
 const isFish=f=>!!DB[f]&&FISH.has(DB[f].g);
 const isEve=n=>/cena|nanna|sera/i.test(n||"");
-function defCook(f){if(["riso","polenta","quinoa","avena"].includes(f))return"pentola";if(["patate","patDolci"].includes(f))return"microonde";if(f==="konjac")return"sciacquato";if(["galRiso","galMais"].includes(f))return"crudo";if(["merluzzo","sogliola","platessa","nasello","persico"].includes(f))return"vapore";if(["gamberi","calamari","cozze","albume","uovo"].includes(f))return"padella";if(["orata","spada","tonnoF","salmone","sgombro"].includes(f))return"piastra";if(["tempeh","seitan","tofuAff"].includes(f))return"piastra";if(f==="asparagi")return"vapore";if(GPOOL.ver.includes(f))return"padella";return"crudo"}
-function defQty(f){if(f==="olio")return 5;if(["mandorle","noci","pistacchi","semiZucca"].includes(f))return 15;if(f==="avocado")return 100;if(["whey","wheyIso"].includes(f))return 30;if(f==="budino")return 170;if(["skyr","greco","quark","fiocchi","ricotta","kefir"].includes(f))return 200;if(f==="albume")return 250;if(f==="uovo")return 100;if(["galRiso","galMais"].includes(f))return 30;if(["riso","polenta","quinoa","avena"].includes(f))return 70;if(["patate","patDolci"].includes(f))return 250;if(["lattuga","rucola"].includes(f))return 100;if(GPOOL.ver.includes(f))return 200;if(["tempeh","seitan","tofuAff"].includes(f))return 180;if(f==="banana")return 120;if(GPOOL.fru.includes(f))return 100;return 200}
+function defCook(f){if(["riso","polenta","quinoa","couscous"].includes(f))return"pentola";if(["patate","patDolci"].includes(f))return"microonde";if(f==="konjac")return"sciacquato";if(["galRiso","galMais"].includes(f))return"crudo";if(["merluzzo","sogliola","platessa","nasello","persico"].includes(f))return"vapore";if(["gamberi","calamari","cozze","albume","uovo"].includes(f))return"padella";if(["orata","spada","tonnoF","salmone","sgombro"].includes(f))return"piastra";if(["tempeh","seitan","tofuAff"].includes(f))return"piastra";if(f==="asparagi")return"vapore";if(GPOOL.ver.includes(f))return"padella";return"crudo"}
+function defQty(f){if(f==="olio")return 5;if(["mandorle","noci","pistacchi","semiZucca"].includes(f))return 15;if(f==="avocado")return 100;if(["whey","wheyIso"].includes(f))return 30;if(f==="budino")return 170;if(["skyr","greco","quark","fiocchi","ricotta","kefir"].includes(f))return 200;if(f==="albume")return 250;if(f==="uovo")return 100;if(["galRiso","galMais"].includes(f))return 30;if(["riso","polenta","quinoa","couscous"].includes(f))return 70;if(["patate","patDolci"].includes(f))return 250;if(["lattuga","rucola"].includes(f))return 100;if(GPOOL.ver.includes(f))return 200;if(["tempeh","seitan","tofuAff"].includes(f))return 180;if(f==="banana")return 120;if(GPOOL.fru.includes(f))return 100;return 200}
 function gpick(pool,used,yest,pref){const off=getOff();let a=pool.filter(k=>DB[k]&&!used.has(k)&&!off.has(k));if(!a.length)a=pool.filter(k=>DB[k]&&!off.has(k));const b=a.filter(k=>!yest.has(k));let p=b.length?b:(a.length?a:pool.filter(k=>DB[k]));if(pref){const f=p.filter(pref);if(f.length)p=f}const x=p[Math.floor(Math.random()*p.length)];used.add(x);return x}
 function rigeneraPasto(mi){if(!cur||cur.cls!=="base"){alert("Solo nei giorni CUT");return}
  const m=cur.meals[mi],nm=m.n||"";
@@ -339,7 +340,7 @@ function addFood(){const v=id=>document.getElementById(id).value.trim();
 const MEM={};function store(k,v){try{localStorage.setItem(k,v)}catch(e){MEM[k]=v}}
 function read(k){try{const v=localStorage.getItem(k);return v==null?(MEM[k]??null):v}catch(e){return MEM[k]??null}}
 function del(k){try{localStorage.removeItem(k)}catch(e){}delete MEM[k]}
-const ABS={riso:180,polenta:400,quinoa:180,gnocchi:25,avena:200};const LEAFY={spinaci:.6,bieta:.6};
+const ABS={riso:180,polenta:400,quinoa:180,gnocchi:25,avena:200,couscous:180};const LEAFY={spinaci:.6,bieta:.6};
 function kcal(f,q){const d=DB[f],m=d.unit?q:q/100;return (d.C*4+d.P*4+d.F*9)*m}
 function vals(f,q,cook){const d=DB[f],r=COOK[cook]?COOK[cook][1]:1,m=d.unit?q:q/100;
  let wr=COOK[cook]&&COOK[cook][2]!=null?COOK[cook][2]:1;if(LEAFY[f]&&cook!=="crudo"&&cook!=="sciacquato")wr=Math.min(wr,LEAFY[f]);
@@ -522,9 +523,25 @@ function addFoodToMeal(mi,nm){const m=cur.meals[mi];
  const cl=foodClass(f);let q=cl==="P"?150:cl==="F"?15:80;q=Math.max(5,q);
  m.items.push([f,q,"crudo"]);(m.locks=m.locks||[]).push(false);rebalance(mi,m.items.length-1);refreshPane(mi)}
 function renderAddMenu(mi,q){const m=cur.meals[mi],box=document.querySelector(`[data-addmenu="${mi}"]`);if(!box||!m)return;
- const ql=(q||"").toLowerCase();
- const list=Object.keys(DB).filter(k=>k!=="sale"&&k!=="kio"&&k!=="mgio"&&!m.items.some(it=>it[0]===k)&&DB[k].n.toLowerCase().includes(ql)).slice(0,30);
- box.innerHTML=list.map(k=>`<div data-addopt="${mi}|${k}" style="padding:7px 10px;cursor:pointer">${DB[k].n}</div>`).join('')||`<div style="padding:7px 10px;color:#888">niente</div>`;
+ const ql=(q||"").trim().toLowerCase();
+ // quanto manca al giorno per il range verde: proposta e ordinamento dei suggerimenti
+ const t=dayTotals(),o=getObj(),oc=objCarbs(o);
+ const ICON={P:"💪",C:"🌾",F:"🫒",K:"🍌",Mg:"⚡"};
+ // deficit "vero": solo se sei sotto l'obiettivo OLTRE la tolleranza del range verde
+ const TH={P:12,C:12,F:10,K:50,Mg:10};
+ const deficit={P:o.P-t.P-TH.P,C:oc-t.C-TH.C,F:o.F-t.F-TH.F,K:3500-t.K-TH.K,Mg:350-t.Mg-TH.Mg};
+ const gaps=Object.keys(deficit).filter(k=>deficit[k]>0);
+ const tot=gaps.reduce((a,x)=>a+deficit[x],0)||1;
+ const W={};gaps.forEach(x=>W[x]=deficit[x]/tot);
+ const score=k=>{const d=DB[k];return gaps.reduce((a,x)=>a+Math.min(1,({P:d.P,C:d.C,F:d.F,K:d.K,Mg:d.Mg})[x]/deficit[x])*W[x],0)};
+ const tag=k=>{if(!gaps.length)return"";const d=DB[k];
+  const s=gaps.filter(x=>({P:d.P,C:d.C,F:d.F,K:d.K,Mg:d.Mg})[x]>0).map(x=>ICON[x]).join("");
+  return s?` <span style="color:#9fd8ff">${s}</span>`:""};
+ let list=Object.keys(DB).filter(k=>k!=="sale"&&k!=="kio"&&k!=="mgio"&&!m.items.some(it=>it[0]===k)&&DB[k].n.toLowerCase().includes(ql));
+ if(gaps.length){list=list.sort((a,b)=>score(b)-score(a));
+  if(!ql)list=list.slice(0,15)}
+ list=list.slice(0,30);
+ box.innerHTML=list.map(k=>`<div data-addopt="${mi}|${k}" style="padding:7px 10px;cursor:pointer">${DB[k].n}${tag(k)}</div>`).join('')||`<div style="padding:7px 10px;color:#888">niente</div>`;
  box.style.display='block'}
 function persist(mi){const m=cur.meals[mi];store(modKey(cur.iso,mi),JSON.stringify({items:m.items,locks:m.locks||[],base:m.myBase||null}));touch()}
 function rebalance(mi,keepIdx){const m=cur.meals[mi];m.locks=m.locks||[];
