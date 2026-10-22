@@ -161,8 +161,7 @@ avena:{n:"Fiocchi avena Lidl",C:58.7,P:13.5,F:7,Na:8,K:350,Mg:130,H:8,g:"carb"},
 mgio:{n:"Magnesio IO.Genix",unit:"cpr",C:0,P:0,F:0,Na:0,K:0,Mg:103.5,H:0,g:"supMg"},
 };
 const COOK={crudo:["Crudo/a",1,1],sciacquato:["Sciacquato",1,1],pentola:["Pentola (assorbe)",.9,1],vapore:["Vapore",.95,.95],padella:["Padella coperchio",.9,.85],piastra:["Piastra",.9,.8],forno:["Forno",.9,.85],microonde:["Microonde",.95,.95]};
-const MAX={riso:150,polenta:150,quinoa:150,gnocchi:300,patate:500,patDolci:500,zucca:400,galRiso:100,galMais:100,konjac:400,ceci:250,merluzzo:400,sogliola:400,platessa:400,nasello:400,persico:400,orata:400,spada:400,tonnoF:300,salmone:300,sgombro:250,gamberi:350,cozze:400,calamari:350,albume:400,uovo:200,skyr:300,greco:300,quark:300,fiocchi:250,ricotta:250,grana:60,olio:20,cocco:10,mandorle:60,noci:60,pistacchi:40,semiZucca:20,avocado:200,ciocc:25,budino:200,misura:60,banana:300,fragole:200,mirtilli:200,spinaci:400,zucchine:400,asparagi:300,bieta:300,broccoli:400,funghi:300,lattuga:200,cappuccio:250,carote:250,barba:200,rucola:200,salsaYo:100,senape:15,sale:10,miele:30,whey:60,wheyIso:60,kio:3,mgio:3,avena:80,salsaSoia:15,tempeh:200,seitan:200,soiaDrink:300,heroLight:30,ketchup:30,tofuAff:250,fusLatt:60,ciocc74:30,kefir:300};
-const VERSION="3.4.5";
+const VERSION="3.5.0";
 const sc=v=>Math.round(v*10)/10;
 const FOODCLS={};["merluzzo","sogliola","platessa","nasello","persico","orata","spada","tonnoF","salmone","sgombro","gamberi","cozze","calamari","albume","skyr","greco","quark","fiocchi","ricotta","kefir","whey","wheyIso","tempeh","seitan","tofuAff","budino"].forEach(k=>FOODCLS[k]="P");
 ["olio","cocco","mandorle","noci","pistacchi","semiZucca","avocado","ciocc","ciocc74","grana","uovo","fusLatt"].forEach(k=>FOODCLS[k]="F");
@@ -174,7 +173,7 @@ function getObj(){try{const o=JSON.parse(read("obiettivi"));
  return{...DEF_OBJ}}
 function objCarbs(o){return Math.max(0,Math.round((o.kcal-o.P*4-o.F*9)/4))}
 function loadCustom(){let arr=[];try{arr=JSON.parse(read("customFoods")||"[]")}catch(e){}
- arr.forEach(c=>{if(!c.key||!DB[c.key]&&c.C!=null){DB[c.key]={n:c.name+(c.brand?" ("+c.brand+")":""),C:+c.C,P:+c.P,F:+c.F,Na:+c.Na||0,K:+c.K||0,Mg:+c.Mg||0,H:+c.H||0,g:c.grp||"x"};FOODCLS[c.key]=c.cls||"C";if(!(c.key in MAX))MAX[c.key]=+c.mx||200}});return arr}
+ arr.forEach(c=>{if(!c.key||!DB[c.key]&&c.C!=null){DB[c.key]={n:c.name+(c.brand?" ("+c.brand+")":""),C:+c.C,P:+c.P,F:+c.F,Na:+c.Na||0,K:+c.K||0,Mg:+c.Mg||0,H:+c.H||0,g:c.grp||"x"};FOODCLS[c.key]=c.cls||"C"}});return arr}
 function getCustom(){try{return JSON.parse(read("customFoods")||"[]")}catch(e){return[]}}
 function getOff(){try{return new Set(JSON.parse(read("rotOff")||"[]"))}catch(e){return new Set()}}
 function applyRotation(t){const off=getOff();if(!off.size)return;
@@ -187,12 +186,12 @@ function scaleToObj(t){const o=getObj(),oc=objCarbs(o);
   if(Pt<=0||Ct<=0||Ft<=0)break;
   const fp=o.P/Pt,fc=oc/Ct,ff=o.F/Ft;
   t.meals.forEach(m=>m.items.forEach(it=>{const[f,q]=it,cl=foodClass(f);if(cl==="X")return;
-   let nq=q*(cl==="P"?fp:cl==="C"?fc:ff);nq=Math.min(MAX[f]||200,Math.max(5,nq));
+   let nq=q*(cl==="P"?fp:cl==="C"?fc:ff);nq=Math.max(5,nq);
    it[1]=nq>=20?Math.round(nq/5)*5:Math.round(nq)}))}
  for(let i=0;i<12;i++){const tk=t.meals.reduce((a,m)=>a+m.items.reduce((x,[f,q])=>x+kcal(f,q),0),0);
   const diff=o.kcal-tk;if(Math.abs(diff)<=50)break;let best=null;
   t.meals.forEach(m=>m.items.forEach(it=>{if(foodClass(it[0])!=="C")return;const k=kcal(it[0],it[1]);if(!best||k>best.k)best={it,k}}));
-  if(!best)break;best.it[1]=Math.min(MAX[best.it[0]]||300,Math.max(20,best.it[1]+(diff>0?10:-10)))}}
+  if(!best)break;best.it[1]=Math.max(20,best.it[1]+(diff>0?10:-10))}}
 function scaleWaterSalt(t,o){
  let foodH=0,bev=0;t.meals.forEach(m=>{m.items.forEach(([f,q,c])=>{foodH+=vals(f,q,c).H});bev+=m.water});
  const tgtB=Math.max(500,Math.round(o.water*1000-foodH)),f=bev>0?tgtB/bev:1;
@@ -224,9 +223,12 @@ function resetFromToday(){const t=new Date();t.setHours(0,0,0,0);const iso=t.get
 function isoOf(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 const GPOOL={carb:["riso","polenta","quinoa","patate","patDolci","galRiso","galMais","avena"],prot:["merluzzo","sogliola","platessa","nasello","persico","orata","spada","tonnoF","salmone","sgombro","gamberi","calamari","albume","uovo","skyr","greco","quark","fiocchi","ricotta","tempeh","seitan","tofuAff"],ver:["spinaci","zucchine","asparagi","bieta","broccoli","funghi","lattuga","cappuccio","carote","barba","rucola","zucca"],fat:["olio","mandorle","noci","pistacchi","semiZucca","avocado"],fru:["banana","fragole","mirtilli"]};
 const GSWO_P=["whey","wheyIso","albume","greco","skyr","quark"],GSWO_C=["banana","galRiso","galMais","fragole","mirtilli"],GSWO_F=["mandorle","noci"];
+const FISH=new Set(["magro","medio","grasso","mare"]);
+const isFish=f=>!!DB[f]&&FISH.has(DB[f].g);
+const isEve=n=>/cena|nanna|sera/i.test(n||"");
 function defCook(f){if(["riso","polenta","quinoa","avena"].includes(f))return"pentola";if(["patate","patDolci"].includes(f))return"microonde";if(f==="konjac")return"sciacquato";if(["galRiso","galMais"].includes(f))return"crudo";if(["merluzzo","sogliola","platessa","nasello","persico"].includes(f))return"vapore";if(["gamberi","calamari","cozze","albume","uovo"].includes(f))return"padella";if(["orata","spada","tonnoF","salmone","sgombro"].includes(f))return"piastra";if(["tempeh","seitan","tofuAff"].includes(f))return"piastra";if(f==="asparagi")return"vapore";if(GPOOL.ver.includes(f))return"padella";return"crudo"}
 function defQty(f){if(f==="olio")return 5;if(["mandorle","noci","pistacchi","semiZucca"].includes(f))return 15;if(f==="avocado")return 100;if(["whey","wheyIso"].includes(f))return 30;if(f==="budino")return 170;if(["skyr","greco","quark","fiocchi","ricotta","kefir"].includes(f))return 200;if(f==="albume")return 250;if(f==="uovo")return 100;if(["galRiso","galMais"].includes(f))return 30;if(["riso","polenta","quinoa","avena"].includes(f))return 70;if(["patate","patDolci"].includes(f))return 250;if(["lattuga","rucola"].includes(f))return 100;if(GPOOL.ver.includes(f))return 200;if(["tempeh","seitan","tofuAff"].includes(f))return 180;if(f==="banana")return 120;if(GPOOL.fru.includes(f))return 100;return 200}
-function gpick(pool,used,yest){const off=getOff();let a=pool.filter(k=>DB[k]&&!used.has(k)&&!off.has(k));if(!a.length)a=pool.filter(k=>DB[k]&&!off.has(k));const b=a.filter(k=>!yest.has(k));const p=b.length?b:(a.length?a:pool.filter(k=>DB[k]));const f=p[Math.floor(Math.random()*p.length)];used.add(f);return f}
+function gpick(pool,used,yest,pref){const off=getOff();let a=pool.filter(k=>DB[k]&&!used.has(k)&&!off.has(k));if(!a.length)a=pool.filter(k=>DB[k]&&!off.has(k));const b=a.filter(k=>!yest.has(k));let p=b.length?b:(a.length?a:pool.filter(k=>DB[k]));if(pref){const f=p.filter(pref);if(f.length)p=f}const x=p[Math.floor(Math.random()*p.length)];used.add(x);return x}
 function rigeneraPasto(mi){if(!cur||cur.cls!=="base"){alert("Solo nei giorni CUT");return}
  const m=cur.meals[mi],nm=m.n||"";
  const used=new Set(),yest=new Set();
@@ -240,11 +242,11 @@ function rigeneraPasto(mi){if(!cur||cur.cls!=="base"){alert("Solo nei giorni CUT
   else{e2=gpick(["fragole","mirtilli","banana"],used,yest);e3=gpick(GSWO_F,used,yest)}
   slots=[it3(P2a),it3(e2)];if(e3)slots.push(it3(e3))}
  else if(/pre-nanna|nanna/i.test(nm)){const PR=["fiocchi","ricotta","budino","greco","kefir"].filter(k=>!used.has(k)&&!getOff().has(k))[0]||"fiocchi";slots=[it3(PR)];if(!used.has("ciocc74")&&!getOff().has("ciocc74")&&Math.random()<0.35){used.add("ciocc74");slots.push(["ciocc74",15,"crudo"])}}
- else{const cb=gpick(GPOOL.carb,used,yest);let vp=GPOOL.ver;if(["patate","patDolci"].includes(cb))vp=GPOOL.ver.filter(k=>["zucchine","lattuga","asparagi","cappuccio","rucola"].includes(k));slots=[it3(cb),it3(gpick(GPOOL.prot,used,yest)),it3(gpick(vp,used,yest)),["olio",5,"crudo"]]}
+ else{const cb=gpick(GPOOL.carb,used,yest);let vp=GPOOL.ver;if(["patate","patDolci"].includes(cb))vp=GPOOL.ver.filter(k=>["zucchine","lattuga","asparagi","cappuccio","rucola"].includes(k));slots=[it3(cb),it3(gpick(GPOOL.prot,used,yest,isEve(nm)?isFish:null)),it3(gpick(vp,used,yest)),["olio",5,"crudo"]]}
  if(!slots.length)return;
  m.items=slots;m.locks=slots.map(()=>false);
  rebalance(mi,-1);
- const v=mealTotals(m);m.myBase={kc:v.kc,K:v.K,Mg:v.Mg,Na:v.Na};persist(mi);refreshPane()}
+ const v=mealTotals(m);m.myBase={kc:v.kc,K:v.K,Mg:v.Mg,Na:v.Na};m.baseK=v.K;m.baseMg=v.Mg;m.baseNa=v.Na;persist(mi);refreshPane()}
 function generaGiorno(){if(!cur||cur.cls!=="base"){alert("Genera solo nei giorni CUT");return}
  const used=new Set(),yest=new Set();
  try{const d=new Date(cur.iso+"T12:00:00");d.setDate(d.getDate()-1);const pg=getPlan(d);pg.meals.forEach(m=>m.items.forEach(it=>yest.add(it[0])));for(let mi=0;mi<8;mi++){try{const s=JSON.parse(read(modKey(isoOf(d),mi)));if(s&&s.items)s.items.forEach(it=>yest.add(it[0]))}catch(e){}}}catch(e){}
@@ -258,7 +260,7 @@ function generaGiorno(){if(!cur||cur.cls!=="base"){alert("Genera solo nei giorni
  else{extra2=gpick(["fragole","mirtilli","banana"],used,yest);extra3=gpick(GSWO_F,used,yest)}
  const carb3=gpick(GPOOL.carb,used,yest);
  let verPool3=GPOOL.ver;if(["patate","patDolci"].includes(carb3))verPool3=GPOOL.ver.filter(k=>["zucchine","lattuga","asparagi","cappuccio","rucola"].includes(k));
- const P3=gpick(GPOOL.prot,used,yest),V3=gpick(verPool3,used,yest);
+ const P3=gpick(GPOOL.prot,used,yest,isFish),V3=gpick(verPool3,used,yest);
  const PR=["fiocchi","ricotta","budino","greco","kefir"].filter(k=>!used.has(k)&&!getOff().has(k))[0]||"fiocchi";
  const t={label:"CUT · Gen",meals:[
   M("Colazione",[],400,"caffe o decaf"),
@@ -422,8 +424,8 @@ function autoSupp(m){if(m.baseK==null)return;
  m.items=m.items.filter(it=>it[0]!=="kio"&&it[0]!=="mgio");
  let K=0,Mg=0;m.items.forEach(([f,q,c])=>{const v=vals(f,q,c);K+=v.K;Mg+=v.Mg});
  const gapK=m.baseK-K,gapMg=m.baseMg-Mg;
- const nK=gapK>20?Math.min(4,Math.max(1,Math.round(gapK/333))):0;
- const nMg=gapMg>5?Math.min(3,Math.max(1,Math.round(gapMg/103.5))):0;
+ const nK=gapK>20?Math.max(1,Math.round(gapK/333)):0;
+ const nMg=gapMg>5?Math.max(1,Math.round(gapMg/103.5)):0;
  if(nK>0)m.items.push(["kio",nK,"crudo"]);
  if(nMg>0)m.items.push(["mgio",nMg,"crudo"])}
 function groupOf(f){return DB[f].g}
@@ -476,7 +478,7 @@ function tab(el){document.querySelectorAll('.tab').forEach(t=>t.classList.remove
 `<table class="grid" style="width:100%;font-size:14px">`+
   (mi===0?[`<tr data-suppitem="R,R"><td colspan="5" style="padding:8px 10px">⏰ Risveglio: 💊 B12</td></tr>`]:[]).concat(m.items.map((it,ii)=>{const[f,q,c]=it,mates=groupMates(f,m);if(f==="kio"||f==="mgio")return "";
    if(f==="sale")return `<tr><td colspan="5">🧂 Sale · ${q}g · fisso</td></tr>`;
-   return `<tr data-drag="${mi},${ii}"><td style="white-space:nowrap"><span draggable="true" style="cursor:grab;color:#888;touch-action:none;user-select:none">&#8942;&#8942;</span> <button class="ghost" data-del="${mi},${ii}">❌</button> <button class="ghost" data-card="${mi},${ii}">📊</button></td><td><select class="inv" data-swap="${mi},${ii}"><option value="${f}" selected>${DB[f].n}</option>${mates.map(k=>`<option value="${k}">${DB[k].n}</option>`).join('')}</select></td><td style="white-space:nowrap"><button class="ghost" data-qstep="${mi},${ii},-5">-</button> <input class="inv" type="number" min="5" max="${MAX[f]||200}" step="5" value="${q}" data-qty="${mi},${ii}"> <button class="ghost" data-qstep="${mi},${ii},5">+</button></td><td style="color:#fff">${COOK[c][0]}</td><td style="text-align:right"><button class="ghost" data-lock="${mi},${ii}" style="border:1px solid #1b2a6b;${(m.locks&&m.locks[ii])?"":"opacity:.25"}">🔒</button></td></tr>`})).join('')+suppRows(m,mi)+`${saltRow(m,mi)?`<tr><td colspan="5">${saltRow(m,mi)}</td></tr>`:""}`+`<tr><td colspan="5"><div class="wbar" data-wbar="${mi}" style="position:relative;background:#222;border:0;border-radius:18px;overflow:hidden;margin:6px 0"><div data-wfill="${mi}" style="height:32px;width:${m.water>0?Math.round((+read('wm_'+cur.iso+'_'+mi)||0)/m.water*100):0}%;background:#4da3ff;transition:width .5s"></div><div data-wtxt="${mi}" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;pointer-events:none">Acqua da bere ${m.water-(+read('wm_'+cur.iso+'_'+mi)||0)}ml / bevuta ${+read('wm_'+cur.iso+'_'+mi)||0}ml</div></div></td></tr>`+`</table>`+`</div>`}).join('')
+   return `<tr data-drag="${mi},${ii}"><td style="white-space:nowrap"><span draggable="true" style="cursor:grab;color:#888;touch-action:none;user-select:none">&#8942;&#8942;</span> <button class="ghost" data-del="${mi},${ii}">❌</button> <button class="ghost" data-card="${mi},${ii}">📊</button></td><td><select class="inv" data-swap="${mi},${ii}"><option value="${f}" selected>${DB[f].n}</option>${mates.map(k=>`<option value="${k}">${DB[k].n}</option>`).join('')}</select></td><td style="white-space:nowrap"><button class="ghost" data-qstep="${mi},${ii},-5">-</button> <input class="inv" type="number" min="5" step="5" value="${q}" data-qty="${mi},${ii}"> <button class="ghost" data-qstep="${mi},${ii},5">+</button></td><td style="color:#fff">${COOK[c][0]}</td><td style="text-align:right"><button class="ghost" data-lock="${mi},${ii}" style="border:1px solid #1b2a6b;${(m.locks&&m.locks[ii])?"":"opacity:.25"}">🔒</button></td></tr>`})).join('')+suppRows(m,mi)+`${saltRow(m,mi)?`<tr><td colspan="5">${saltRow(m,mi)}</td></tr>`:""}`+`<tr><td colspan="5"><div class="wbar" data-wbar="${mi}" style="position:relative;background:#222;border:0;border-radius:18px;overflow:hidden;margin:6px 0"><div data-wfill="${mi}" style="height:32px;width:${m.water>0?Math.round((+read('wm_'+cur.iso+'_'+mi)||0)/m.water*100):0}%;background:#4da3ff;transition:width .5s"></div><div data-wtxt="${mi}" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;pointer-events:none">Acqua da bere ${m.water-(+read('wm_'+cur.iso+'_'+mi)||0)}ml / bevuta ${+read('wm_'+cur.iso+'_'+mi)||0}ml</div></div></td></tr>`+`</table>`+`</div>`}).join('')
   ;
   // click/change gestiti in delegazione su #sheet (fondo script)
  }
@@ -517,7 +519,7 @@ function dayTitle(){const d=new Date(cur.iso+'T12:00:00'),cap=s=>s.charAt(0).toU
 function addFoodToMeal(mi,nm){const m=cur.meals[mi];
  const f=Object.keys(DB).find(k=>DB[k].n===nm);
  if(!f||m.items.some(it=>it[0]===f))return;
- const cl=foodClass(f);let q=cl==="P"?150:cl==="F"?15:80;q=Math.min(MAX[f]||100,Math.max(5,q));
+ const cl=foodClass(f);let q=cl==="P"?150:cl==="F"?15:80;q=Math.max(5,q);
  m.items.push([f,q,"crudo"]);(m.locks=m.locks||[]).push(false);rebalance(mi,m.items.length-1);refreshPane(mi)}
 function renderAddMenu(mi,q){const m=cur.meals[mi],box=document.querySelector(`[data-addmenu="${mi}"]`);if(!box||!m)return;
  const ql=(q||"").toLowerCase();
@@ -526,22 +528,33 @@ function renderAddMenu(mi,q){const m=cur.meals[mi],box=document.querySelector(`[
  box.style.display='block'}
 function persist(mi){const m=cur.meals[mi];store(modKey(cur.iso,mi),JSON.stringify({items:m.items,locks:m.locks||[],base:m.myBase||null}));touch()}
 function rebalance(mi,keepIdx){const m=cur.meals[mi];m.locks=m.locks||[];
- const fixed=new Set();if(keepIdx>=0)fixed.add(keepIdx);m.locks.forEach((l,i)=>{if(l)fixed.add(i)});
- const editable=m.items.map((it,i)=>({i,k:it[0]==="sale"?0:kcal(it[0],it[1])})).filter(o=>o.k>0&&!fixed.has(o.i));
- let keptK=0;fixed.forEach(i=>{const it=m.items[i];if(it&&it[0]!=="sale")keptK+=kcal(it[0],it[1])});
- const target=m.target-keptK;let sum=editable.reduce((a,o)=>a+o.k,0);
- if(sum<=0||target<=0){editable.forEach(o=>m.items[o.i][1]=5)}
- else{const f=target/sum;editable.forEach(o=>{const ff=m.items[o.i][0];m.items[o.i][1]=Math.min(MAX[ff]||200,Math.max(5,Math.round(m.items[o.i][1]*f)))})}
- let tot=m.items.reduce((a,[f,q])=>a+kcal(f,q),0);
- if(tot>m.target*1.05&&tot>0){const f2=m.target/tot;m.items.forEach((it,i)=>{if(fixed.has(i)||it[0]==="sale"||it[0]==="kio"||it[0]==="mgio")return;it[1]=Math.max(5,Math.round(it[1]*f2))})}
+ const ed=f=>f!=="sale"&&f!=="kio"&&f!=="mgio",tg=+m.target||0,tol=Math.max(5,tg*0.01);
+ const fit=idxs=>{if(!idxs.length||tg<=0)return false;
+  const oth=m.items.map((it,i)=>i).filter(i=>ed(m.items[i][0])&&idxs.indexOf(i)<0);
+  let kept=0;oth.forEach(i=>kept+=kcal(m.items[i][0],m.items[i][1]));
+  for(let p=0;p<60;p++){let sum=0;idxs.forEach(i=>{sum+=kcal(m.items[i][0],m.items[i][1])});
+   if(Math.abs(kept+sum-tg)<=tol)return true;
+   const t=tg-kept;
+   if(t<=0){idxs.forEach(i=>m.items[i][1]=5);sum=0;idxs.forEach(i=>sum+=kcal(m.items[i][0],m.items[i][1]));return Math.abs(kept+sum-tg)<=tol}
+   if(sum<=0)return false;
+   const f=t/sum;let mv=false;
+   idxs.forEach(i=>{const q=m.items[i][1],n=Math.max(5,Math.round(q*f));if(n!==q){m.items[i][1]=n;mv=true}});
+   if(!mv)return false}
+  return false};
+ const isLK=i=>!!(m.locks&&m.locks[i])&&ed(m.items[i][0]);
+ // 1) ricalcola prima gli altri alimenti del pasto
+ let ok=fit(m.items.map((it,i)=>i).filter(i=>ed(m.items[i][0])&&!isLK(i)&&i!==keepIdx));
+ // 2) se non basta e l'alimento toccato non è bloccato, scala anche quello:
+ //    il range verde regna finché non metti il lucchetto 🔒
+ if(!ok&&keepIdx>=0&&ed(m.items[keepIdx][0])&&!isLK(keepIdx))fit([keepIdx]);
  autoSupp(m);persist(mi)}
-function editQty(mi,ii,q){const m=cur.meals[mi];if(!(q>0)){refreshPane();return}const f=m.items[ii][0];q=Math.min(MAX[f]||200,Math.max(5,Math.round(q)));m.items[ii][1]=q;rebalance(mi,ii);refreshPane(mi)}
+function editQty(mi,ii,q){const m=cur.meals[mi];if(!(q>0)){refreshPane();return}m.items[ii][1]=Math.max(5,Math.round(q));rebalance(mi,ii);refreshPane(mi)}
 let delPend=null;
 function askDel(mi,ii){delPend=[mi,ii];mbox.innerHTML=`<h3>Elimino questo alimento?</h3><br><button onclick="doDel()">Elimina</button> <button class="ghost" onclick="document.getElementById('modal').style.display='none'">Annulla</button>`;document.getElementById('modal').style.display='flex'}
 function doDel(){document.getElementById('modal').style.display='none';if(!delPend||!cur)return;const mi=delPend[0],ii=delPend[1];delPend=null;const m=cur.meals[mi];if(m&&m.items.length>1){m.items.splice(ii,1);if(m.locks)m.locks.splice(ii,1);rebalance(mi,-1);refreshPane(mi)}}
 function swapFood(mi,ii,nf){cur.meals[mi].items[ii][0]=nf;rebalance(mi,ii);refreshPane(mi)}
 function setCook(mi,ii,c){const m=cur.meals[mi];m.items[ii][2]=c;autoSupp(m);persist(mi);refreshPane(mi)}
-function togLock(mi,ii){const m=cur.meals[mi];m.locks=m.locks||m.items.map(()=>false);m.locks[ii]=!m.locks[ii];persist(mi);refreshPane(mi)}
+function togLock(mi,ii){const m=cur.meals[mi];m.locks=m.locks||m.items.map(()=>false);m.locks[ii]=!m.locks[ii];rebalance(mi,-1);refreshPane(mi)}
 function refreshPane(flashMi){const on=document.querySelector('.tab.on');if(!on||!cur)return;distributeNa(cur);distributeWater(cur);capKDay(cur);tab(on);paintDone();}
 function drunkOf(mi){return +read('wm_'+cur.iso+'_'+mi)||0}
 function drunkDay(){let s=0;cur.meals.forEach((m,mi)=>{s+=drunkOf(mi)});return s}
