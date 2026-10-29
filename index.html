@@ -2,6 +2,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="icon" type="image/png" href="Peak%20Week%20Calculatroe%20ICO.png">
 <link rel="apple-touch-icon" href="Peak%20Week%20Calculatroe%20ICO.png">
+<link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#0d0f1a">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -168,7 +169,7 @@ couscous:{n:"Cous cous",C:77,P:12.8,F:.6,Na:46,K:58,Mg:8,H:12,g:"carb"},
 mgio:{n:"Magnesio IO.Genix",unit:"cpr",C:0,P:0,F:0,Na:0,K:0,Mg:103.5,H:0,g:"supMg"},
 };
 const COOK={crudo:["Crudo/a",1,1],sciacquato:["Sciacquato",1,1],pentola:["Pentola (assorbe)",.9,1],vapore:["Vapore",.95,.95],padella:["Padella coperchio",.9,.85],piastra:["Piastra",.9,.8],forno:["Forno",.9,.85],microonde:["Microonde",.95,.95]};
-const VERSION="3.6.5";
+const VERSION="3.6.6";
 const sc=v=>Math.round(v*10)/10;
 const FOODCLS={};["merluzzo","sogliola","platessa","nasello","persico","orata","spada","tonnoF","salmone","sgombro","gamberi","cozze","calamari","albume","skyr","greco","quark","fiocchi","ricotta","kefir","whey","wheyIso","tempeh","seitan","tofuAff","budino"].forEach(k=>FOODCLS[k]="P");
 ["olio","cocco","mandorle","noci","pistacchi","semiZucca","avocado","ciocc","ciocc74","grana","uovo","fusLatt"].forEach(k=>FOODCLS[k]="F");
@@ -205,14 +206,15 @@ function scaleWaterSalt(t,o){
  const tgtB=Math.max(500,Math.round(o.water*1000-foodH)),f=bev>0?tgtB/bev:1;
  t.meals.forEach(m=>{m.water=Math.max(0,Math.round(m.water*f/50)*50)});
  const targetNa=o.sale*400;let foodNa=0,kc=0;
- const info=t.meals.map(m=>{let n=0,k=0;m.items.forEach(([f,q])=>{if(f!=="sale"){const d=DB[f];if(d){n+=d.Na*q/100;k+=kcal(f,q)}}});foodNa+=n;kc+=k;return{n,k}});
+ const dolc=m=>/nanna/i.test(m.n||"")||/pre.?wo/i.test(m.n||"");
+ const info=t.meals.map(m=>{let n=0,k=0;m.items.forEach(([f,q])=>{if(f!=="sale"){const d=DB[f];if(d){n+=d.Na*q/100;k+=kcal(f,q)}}});foodNa+=n;kc+=dolc(m)?0:k;return{n,k:dolc(m)?0:k}});
  let rem=Math.max(0,targetNa-foodNa);
- t.meals.forEach((m,i)=>{m.naTarget=Math.round(info[i].n+(kc>0?rem*info[i].k/kc:rem/t.meals.length))});
+ t.meals.forEach((m,i)=>{m.naTarget=Math.round(info[i].n+(kc>0?rem*info[i].k/kc:0))});
 }
-function distributeNa(p){const o=getObj(),tgt=o.sale*400;
+function distributeNa(p){const o=getObj(),tgt=o.sale*400,dolce=m=>/nanna/i.test(m.n||"")||/pre.?wo/i.test(m.n||"");
  const foods=p.meals.map(m=>{let n=0,k=0;m.items.forEach(([f,q,c])=>{if(f!=="sale"&&f!=="kio"&&f!=="mgio"){const v=vals(f,q,c);n+=v.Na;k+=v.kc}});return{n:n,k:k}});
- const fT=foods.reduce((a,f)=>a+f.n,0),kT=foods.reduce((a,f)=>a+f.k,0),rem=Math.max(0,tgt-fT);
- p.meals.forEach((m,i)=>{m.naTarget=Math.round(foods[i].n+(kT>0?rem*foods[i].k/kT:rem/p.meals.length))});
+ const fT=foods.reduce((a,f)=>a+f.n,0),kT=foods.reduce((a,f,i)=>a+(dolce(p.meals[i])?0:f.k),0),rem=Math.max(0,tgt-fT);
+ p.meals.forEach((m,i)=>{m.naTarget=Math.round(foods[i].n+(dolce(m)?0:(kT>0?rem*foods[i].k/kT:0)))});
  const totG=Math.max(0,(tgt-fT)/387),ex=p.meals.map(m=>{let fn=0;m.items.forEach(([f,q,c])=>{if(f!=="sale")fn+=vals(f,q,c).Na});return Math.max(0,(m.naTarget-Math.round(fn))/387)});
  const fl=ex.map(g=>Math.floor(g*2)/2);let steps=Math.round((totG-fl.reduce((a,b)=>a+b,0))*2);
  fl.map((g,i)=>[g-ex[i],i]).sort((a,b)=>a[0]-b[0]).slice(0,Math.max(0,Math.min(fl.length,steps))).forEach(([,i])=>{fl[i]+=0.5});
