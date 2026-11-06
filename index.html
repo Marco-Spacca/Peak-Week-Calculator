@@ -169,7 +169,7 @@ couscous:{n:"Cous cous",C:77,P:12.8,F:.6,Na:46,K:58,Mg:8,H:12,g:"carb"},
 mgio:{n:"Magnesio IO.Genix",unit:"cpr",C:0,P:0,F:0,Na:0,K:0,Mg:103.5,H:0,g:"supMg"},
 };
 const COOK={crudo:["Crudo/a",1,1],sciacquato:["Sciacquato",1,1],pentola:["Pentola (assorbe)",.9,1],vapore:["Vapore",.95,.95],padella:["Padella coperchio",.9,.85],piastra:["Piastra",.9,.8],forno:["Forno",.9,.85],microonde:["Microonde",.95,.95]};
-const VERSION="3.6.6";
+const VERSION="3.7.0";
 const sc=v=>Math.round(v*10)/10;
 const FOODCLS={};["merluzzo","sogliola","platessa","nasello","persico","orata","spada","tonnoF","salmone","sgombro","gamberi","cozze","calamari","albume","skyr","greco","quark","fiocchi","ricotta","kefir","whey","wheyIso","tempeh","seitan","tofuAff","budino"].forEach(k=>FOODCLS[k]="P");
 ["olio","cocco","mandorle","noci","pistacchi","semiZucca","avocado","ciocc","ciocc74","grana","uovo","fusLatt"].forEach(k=>FOODCLS[k]="F");
@@ -177,10 +177,20 @@ const NO_SCALE=new Set(["sale","konjac","miele","salsaYo","senape","salsaSoia","
 const OLIO_MAX=10; // tetto di default per l'olio: oltre solo col lucchetto 🔒
 function foodClass(f){if(NO_SCALE.has(f))return "X";return FOODCLS[f]||"C"}
 const DEF_OBJ={kcal:1750,P:195,F:55,water:4.5,sale:7};
-function getObj(){try{const o=JSON.parse(read("obiettivi"));
- if(o&&o.kcal>0)return{kcal:+o.kcal,P:+o.P||0,F:+o.F||0,water:+o.water||4.5,sale:+o.sale||7}}catch(e){}
- return{...DEF_OBJ}}
-function objCarbs(o){return Math.max(0,Math.round((o.kcal-o.P*4-o.F*9)/4))}
+function getObj(iso){try{const o=JSON.parse(read("obiettivi"));
+ if(o&&o.kcal>0){const b={kcal:+o.kcal,P:+o.P||0,F:+o.F||0,water:+o.water||4.5,sale:+o.sale||7};return (iso&&OBJBYDAY[iso])?{...b,...OBJBYDAY[iso]}:b}}catch(e){}
+ return (iso&&OBJBYDAY[iso])?{...DEF_OBJ,...OBJBYDAY[iso]}:{...DEF_OBJ}}
+// obiettivi per singolo giorno dal CRONOPROGRAMMA PRE-GARA (dati nel PDF); il resto dei giorni usa la base globale
+const OBJBYDAY={
+ "2026-11-08":{kcal:1750,P:195,C:120,F:50,water:5.0,sale:5.5},
+ "2026-11-09":{kcal:1550,P:195,C:80,F:50,water:5.75,sale:6.5},
+ "2026-11-10":{kcal:1550,P:195,C:80,F:50,water:5.75,sale:6.5},
+ "2026-11-11":{kcal:1500,P:195,C:70,F:45,water:6.0,sale:6.5},
+ "2026-11-12":{kcal:2200,P:160,C:280,F:35,water:4.5,sale:5.5},
+ "2026-11-13":{kcal:2050,P:160,C:240,F:35,water:3.75,sale:4.5},
+ "2026-11-14":{kcal:1800,P:150,C:200,F:35,water:1.5,sale:3.5},
+ "2026-11-15":{kcal:1800,P:150,C:200,F:35,water:1.5,sale:3.5}};
+function objCarbs(o){if(o.C)return +o.C;return Math.max(0,Math.round((o.kcal-o.P*4-o.F*9)/4))}
 function loadCustom(){let arr=[];try{arr=JSON.parse(read("customFoods")||"[]")}catch(e){}
  arr.forEach(c=>{if(!c.key||!DB[c.key]&&c.C!=null){DB[c.key]={n:c.name+(c.brand?" ("+c.brand+")":""),C:+c.C,P:+c.P,F:+c.F,Na:+c.Na||0,K:+c.K||0,Mg:+c.Mg||0,H:+c.H||0,g:c.grp||"x"};FOODCLS[c.key]=c.cls||"C"}});return arr}
 function getCustom(){try{return JSON.parse(read("customFoods")||"[]")}catch(e){return[]}}
@@ -189,7 +199,7 @@ function applyRotation(t){const off=getOff();if(!off.size)return;
  t.meals.forEach(m=>{m.items=m.items.map(it=>{const[f,q,c]=it;if(!off.has(f))return it;
   const mates=Object.keys(DB).filter(k=>DB[k].g===DB[f].g&&k!==f&&!off.has(k)&&!m.items.some(x=>x[0]===k));
   return mates.length?[mates[0], mates[0]==="olio"?Math.min(q,OLIO_MAX):q, c]:it})})}
-function scaleToObj(t){const o=getObj(),oc=objCarbs(o);
+function scaleToObj(t){const o=getObj(t.iso),oc=objCarbs(o);
  for(let pass=0;pass<2;pass++){let Pt=0,Ct=0,Ft=0;
   t.meals.forEach(m=>m.items.forEach(([f,q])=>{const d=DB[f];if(!d)return;Pt+=d.P*q/100;Ct+=d.C*q/100;Ft+=d.F*q/100}));
   if(Pt<=0||Ct<=0||Ft<=0)break;
@@ -211,7 +221,7 @@ function scaleWaterSalt(t,o){
  let rem=Math.max(0,targetNa-foodNa);
  t.meals.forEach((m,i)=>{m.naTarget=Math.round(info[i].n+(kc>0?rem*info[i].k/kc:0))});
 }
-function distributeNa(p){const o=getObj(),tgt=o.sale*400,dolce=m=>/nanna/i.test(m.n||"")||/pre.?wo/i.test(m.n||"");
+function distributeNa(p){const o=getObj(p.iso),tgt=o.sale*400,dolce=m=>/nanna/i.test(m.n||"")||/pre.?wo/i.test(m.n||"");
  const foods=p.meals.map(m=>{let n=0,k=0;m.items.forEach(([f,q,c])=>{if(f!=="sale"&&f!=="kio"&&f!=="mgio"){const v=vals(f,q,c);n+=v.Na;k+=v.kc}});return{n:n,k:k}});
  const fT=foods.reduce((a,f)=>a+f.n,0),kT=foods.reduce((a,f,i)=>a+(dolce(p.meals[i])?0:f.k),0),rem=Math.max(0,tgt-fT);
  p.meals.forEach((m,i)=>{m.naTarget=Math.round(foods[i].n+(dolce(m)?0:(kT>0?rem*foods[i].k/kT:0)))});
@@ -219,7 +229,7 @@ function distributeNa(p){const o=getObj(),tgt=o.sale*400,dolce=m=>/nanna/i.test(
  const fl=ex.map(g=>Math.floor(g*2)/2);let steps=Math.round((totG-fl.reduce((a,b)=>a+b,0))*2);
  fl.map((g,i)=>[g-ex[i],i]).sort((a,b)=>a[0]-b[0]).slice(0,Math.max(0,Math.min(fl.length,steps))).forEach(([,i])=>{fl[i]+=0.5});
  p.meals.forEach((m,i)=>{m.saltG=Math.round(fl[i]*2)/2})}
-function distributeWater(p){if(p.cls!=="base"&&p.cls!=="clean")return;const o=getObj();let foodH=0,bev=0;
+function distributeWater(p){if(p.cls!=="base"&&p.cls!=="clean")return;const o=getObj(p.iso);let foodH=0,bev=0;
  p.meals.forEach(m=>{m.items.forEach(([f,q,c])=>{foodH+=vals(f,q,c).H});bev+=m.water});
  const tgtB=Math.max(500,Math.round(o.water*1000-foodH)),f=bev>0?tgtB/bev:1;
  p.meals.forEach(m=>{m.water=Math.max(0,Math.round(m.water*f/50)*50)})}
@@ -423,14 +433,18 @@ function getPlan(d){
  const s0=new Date(2026,9,12);
  const diff=Math.round((dd-s0)/864e5);
  if(read("empty_"+iso))return{label:"Giorno vuoto",meals:[],iso,cls:"base"};
+ if(PLANMAP[iso]){const t=JSON.parse(JSON.stringify(PLANMAP[iso]));t.iso=iso;
+  if(!t.noScale){scaleToObj(t);scaleWaterSalt(t,getObj(iso))}
+  return t}
  const t=JSON.parse(JSON.stringify(CUT[((diff%7)+7)%7]));
  applyRotation(t);
  if(dd>=D(2026,10,12)&&dd<=D(2026,10,15)){
   t.meals.forEach(m=>m.items=m.items.map(it=>CLEAN_SWAP[it[0]]||it));t.label+=" · no coccole";t.cls="clean";
  }else t.cls="base";
+ t.iso=iso;
  scaleToObj(t);
- scaleWaterSalt(t,getObj());
- t.iso=iso;return t;
+ scaleWaterSalt(t,getObj(t.iso));
+ return t;
 }
 function mealTotals(m){let t={C:0,P:0,F:0,Na:0,K:0,Mg:0,H:0,kc:0};
  m.items.forEach(([f,q,c])=>{const v=vals(f,q,c);t.C+=v.C;t.P+=v.P;t.F+=v.F;t.Na+=v.Na;t.K+=v.K;t.Mg+=v.Mg;t.H+=v.H;t.kc+=v.kc});
@@ -470,7 +484,9 @@ function renderCal(){const c=document.getElementById('cal');c.innerHTML="";
   const kc=Math.round(p.meals.reduce((a,m)=>a+mealTotals(m).kc,0));
   const short=p.label.replace(/CUT · \w+/,'CUT');
   el.innerHTML=`<b>${cap(dd.toLocaleDateString('it',{weekday:'short'}))}. ${dd.getDate()} ${cap(dd.toLocaleDateString('it',{month:'short'}))}.</b><span>${short}</span><span>${kc} kcal</span>`;
-  el.onclick=()=>openDay(dd);c.appendChild(el)}}
+  el.onclick=()=>openDay(dd);c.appendChild(el)}
+  const tl=c.querySelector('.today');
+  if(tl)tl.scrollIntoView({block:'center',behavior:'instant'})}
 function modKey(iso,mi){return 'mod6_'+iso+'_'+mi}
 function loadMeal(iso,mi,base){try{const s=JSON.parse(read(modKey(iso,mi)));if(s&&s.items)return s}catch(e){}return JSON.parse(JSON.stringify(base))}
 function openDay(d){cur=d;const p=getPlan(d);store("lastDay",p.iso);
@@ -505,7 +521,7 @@ function tab(el){document.querySelectorAll('.tab').forEach(t=>t.classList.remove
   ;
   // click/change gestiti in delegazione su #sheet (fondo script)
  }
-if(name==="Idratazione"){const o=getObj(),drunk2=drunkDay();let foodNa=0,nK=0,nMg=0;cur.meals.forEach(m=>m.items.forEach(([f,q,c])=>{const v=vals(f,q,c);if(f==="kio")nK+=q;else if(f==="mgio")nMg+=q;else if(f!=="sale")foodNa+=v.Na}));foodNa=Math.round(foodNa);const kFood=Math.round(t.K-nK*333),mgFood=Math.round(t.Mg-nMg*103.5),saleTgt=o.sale,remN=Math.max(0,(saleTgt*400-foodNa)/387-smDay()),saltAdd=sc(remN)+"g",ratio=t.Na>0?"1:"+(t.K/t.Na).toFixed(2):"-",rNaK=t.Na>0?t.K/t.Na:0,rSW=(t.H+t.w)>0?t.Na/400/((t.H+t.w)/1000):0,rKMg=t.Mg>0?t.K/t.Mg:0,rc=(v,a,b,c,d)=>v>=a&&v<=b?"#2ecc71":v>=c&&v<=d?"#ffd60a":"#ff4d6d";pane.innerHTML=`<h3 style="margin:6px 0">Rapporto di idratazione</h3><table class="grid" style="font-size:17px;border-collapse:separate;border-spacing:3px"><tr><td></td><td><b>Target</b></td><td><b>Dal cibo</b></td><td><b>Integrazione</b></td></tr><tr><td>Acqua</td><td>${o.water*1000+"ml"}</td><td>${t.H}ml</td><td>bere ${t.w} - bevuti ${drunk2} - mancano <b style="color:${rc(t.w-drunk2,0,0,1,500)}">${Math.max(0,Math.round(t.w-drunk2))}ml</b></td></tr><tr><td>Sale</td><td>${saleTgt+"g"}</td><td>${sc(foodNa/400)}g</td><td>aggiungere <b style="color:${rc(remN,0,0,0.01,1)}">${saltAdd}</b></td></tr><tr><td>Potassio</td><td>3500-4500mg</td><td style="color:${rc(kFood,3500,5500,3000,6000)}">${kFood}mg</td><td>${nK?nK+"cpr (+"+Math.round(nK*333)+"mg)":"-"}</td></tr><tr><td>Magnesio</td><td>350-400mg</td><td style="color:${rc(mgFood,350,1e9,250,350)}">${mgFood}mg</td><td>${nMg?nMg+"cpr (+"+Math.round(nMg*103.5)+"mg)":"-"}</td></tr></table><br><table class="grid" style="font-size:15px;border-collapse:separate;border-spacing:2px"><tr><td><b>Ideali</b></td><td><b>Tuoi oggi</b></td></tr><tr><td>Na:K 1:1.5</td><td style="color:${rc(rNaK,1.28,1.73,1.05,1.95)};padding:2px 10px;border-radius:6px">1:${rNaK.toFixed(2)}</td></tr><tr><td>Sale:acqua 1.5g/L</td><td style="color:${rc(rSW,1.28,1.73,1.05,1.95)};padding:2px 10px;border-radius:6px">${rSW.toFixed(2)}g/L</td></tr><tr><td>K:Mg 8:1</td><td style="color:${rc(rKMg,6.8,9.2,5.6,11.2)};padding:2px 10px;border-radius:6px">${rKMg.toFixed(1)}:1</td></tr></table>`}
+if(name==="Idratazione"){const o=getObj(cur.iso),drunk2=drunkDay();let foodNa=0,nK=0,nMg=0;cur.meals.forEach(m=>m.items.forEach(([f,q,c])=>{const v=vals(f,q,c);if(f==="kio")nK+=q;else if(f==="mgio")nMg+=q;else if(f!=="sale")foodNa+=v.Na}));foodNa=Math.round(foodNa);const kFood=Math.round(t.K-nK*333),mgFood=Math.round(t.Mg-nMg*103.5),saleTgt=o.sale,remN=Math.max(0,(saleTgt*400-foodNa)/387-smDay()),saltAdd=sc(remN)+"g",ratio=t.Na>0?"1:"+(t.K/t.Na).toFixed(2):"-",rNaK=t.Na>0?t.K/t.Na:0,rSW=(t.H+t.w)>0?t.Na/400/((t.H+t.w)/1000):0,rKMg=t.Mg>0?t.K/t.Mg:0,rc=(v,a,b,c,d)=>v>=a&&v<=b?"#2ecc71":v>=c&&v<=d?"#ffd60a":"#ff4d6d";pane.innerHTML=`<h3 style="margin:6px 0">Rapporto di idratazione</h3><table class="grid" style="font-size:17px;border-collapse:separate;border-spacing:3px"><tr><td></td><td><b>Target</b></td><td><b>Dal cibo</b></td><td><b>Integrazione</b></td></tr><tr><td>Acqua</td><td>${o.water*1000+"ml"}</td><td>${t.H}ml</td><td>bere ${t.w} - bevuti ${drunk2} - mancano <b style="color:${rc(t.w-drunk2,0,0,1,500)}">${Math.max(0,Math.round(t.w-drunk2))}ml</b></td></tr><tr><td>Sale</td><td>${saleTgt+"g"}</td><td>${sc(foodNa/400)}g</td><td>aggiungere <b style="color:${rc(remN,0,0,0.01,1)}">${saltAdd}</b></td></tr><tr><td>Potassio</td><td>3500-4500mg</td><td style="color:${rc(kFood,3500,5500,3000,6000)}">${kFood}mg</td><td>${nK?nK+"cpr (+"+Math.round(nK*333)+"mg)":"-"}</td></tr><tr><td>Magnesio</td><td>350-400mg</td><td style="color:${rc(mgFood,350,1e9,250,350)}">${mgFood}mg</td><td>${nMg?nMg+"cpr (+"+Math.round(nMg*103.5)+"mg)":"-"}</td></tr></table><br><table class="grid" style="font-size:15px;border-collapse:separate;border-spacing:2px"><tr><td><b>Ideali</b></td><td><b>Tuoi oggi</b></td></tr><tr><td>Na:K 1:1.5</td><td style="color:${rc(rNaK,1.28,1.73,1.05,1.95)};padding:2px 10px;border-radius:6px">1:${rNaK.toFixed(2)}</td></tr><tr><td>Sale:acqua 1.5g/L</td><td style="color:${rc(rSW,1.28,1.73,1.05,1.95)};padding:2px 10px;border-radius:6px">${rSW.toFixed(2)}g/L</td></tr><tr><td>K:Mg 8:1</td><td style="color:${rc(rKMg,6.8,9.2,5.6,11.2)};padding:2px 10px;border-radius:6px">${rKMg.toFixed(1)}:1</td></tr></table>`}
  if(name==="Dati corporei"){const sv=JSON.parse(read('b_'+ds)||'{}');
   pane.innerHTML=`<input class="txt" id="peso" placeholder="Peso kg digiuno" value="${sv.peso||''}"><input class="txt" id="fm" placeholder="FM %" value="${sv.fm||''}"><input class="txt" id="idr" placeholder="Idratazione %" value="${sv.idr||''}"><input class="txt" id="note" placeholder="Note (specchio, forza, fame, sonno)" value="${sv.note||''}">
   <button onclick="saveB()">Salva</button> <small id="msg"></small>`}
@@ -517,7 +533,7 @@ function paintHead(name){const dh=document.getElementById("dayhead");if(!dh||!cu
  if(name==="Dieta"){top=(cur.cls==="base"||cur.cls==="clean")?targetTable(t):`<div class="kcal">Kcal ${t.kc} · 🌾${t.C}g 💪${t.P}g 🫒${t.F}g</div>`}
  else if(name!=="Idratazione"){top=`<div class="kcal" style="margin:4px 0">Kcal ${t.kc} · 🌾${t.C}g 💪${t.P}g 🫒${t.F}g · 💧 da bere ${t.w}ml</div>`}
  const pane=document.getElementById("pane");pane.innerHTML=top+pane.innerHTML}
-function targetTable(t){const o=getObj(),oc=objCarbs(o);
+function targetTable(t){const o=getObj(cur.iso),oc=objCarbs(o);
  const G="background:#1d5c2e",O="background:#8a5a00",R="background:#8a1f1f";
  const sgn=(v,dec)=>((v>=0?"+":"")+v.toFixed(dec==null?0:dec));
  const c3=(disp,val,opt,tol,warn)=>{const a=Math.abs(val-opt);const c=a<=(tol||0)?G:a<=(warn||tol*2)?O:R;return `<td style="${c};padding:2px 10px;border-radius:6px">${disp}</td>`};
@@ -547,7 +563,7 @@ function addFoodToMeal(mi,nm){const m=cur.meals[mi];
 function renderAddMenu(mi,q){const m=cur.meals[mi],box=document.querySelector(`[data-addmenu="${mi}"]`);if(!box||!m)return;
  const ql=(q||"").trim().toLowerCase();
  // quanto manca al giorno per il range verde: proposta e ordinamento dei suggerimenti
- const t=dayTotals(),o=getObj(),oc=objCarbs(o);
+ const t=dayTotals(),o=getObj(cur.iso),oc=objCarbs(o);
  const ICON={P:"💪",C:"🌾",F:"🫒",K:"🍌",Mg:"⚡"};
  // deficit "vero": solo se sei sotto l'obiettivo OLTRE la tolleranza del range verde
  const TH={P:12,C:12,F:10,K:50,Mg:10};
@@ -630,18 +646,24 @@ async function expData(){const d={};try{for(let i=0;i<localStorage.length;i++){c
  const b=new Blob([j],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="road-to-stage-backup.json";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}// ============================================
 // CARICA PIANO 18/10 → 15/11 (pulsante nel menu ⚙️)
 // ============================================
+// ============================================
+// CRONOPROGRAMMA PRE-GARA 18/10 → 15/11 (dal PDF "Programma Giornaliero Pre-Gara")
+// ============================================
 function caricaPianoGara() {
   if (!confirm("Sovrascrive tutti i pasti dal 18/10 al 15/11. Continua?")) return;
-
-  const COL = M("Colazione", [], 0, "☕ Caffè");
-  const Q = {
-    wheyIso: 40, greco: 200, albume: 100,
-    merluzzo: 250, seitan: 150, tofuAff: 150, salmone: 100,
-    quark: 100, whey: 30, avena: 60, soiaDrink: 250,
-    riso: 90, patDolci: 100, patate: 250,
-    zucchine: 200, broccoli: 150, spinaci: 200, carote: 150,
-    olio: 10, fragole: 100, banana: 150, miele: 15, galRiso: 40
-  };
+  store("obiettivi", JSON.stringify({ kcal: 1750, P: 195, F: 50, water: 4.5, sale: 5.5 }));
+  regenDallaData("2026-10-18");
+  alert("\u2705 Piano caricato! Apri le date sul calendario.");
+}
+const COL = M("Colazione", [], 0, "☕ Caffè");
+const Q = {
+  wheyIso: 40, greco: 200, albume: 100,
+  merluzzo: 250, seitan: 150, tofuAff: 150, salmone: 100,
+  quark: 100, whey: 30, avena: 60, soiaDrink: 250,
+  riso: 90, patDolci: 100, patate: 250,
+  zucchine: 200, broccoli: 150, spinaci: 200, carote: 150,
+  olio: 10, fragole: 100, banana: 150, miele: 15, galRiso: 40
+};
 
   const BASELINE = { label: "BASELINE", cls: "base", meals: [
     COL,
@@ -701,8 +723,9 @@ function caricaPianoGara() {
     M("Cena", [], 0, "Post-gara: libera"),
     M("Pre-nanna", [], 0, "")
   ]};
+  const PREPEAK = { ...BASELINE, label: "PRE PEAK WEEK" };
 
-  const planMap = {
+  const PLANMAP = {
     "2026-10-18": BASELINE, "2026-10-19": BASELINE, "2026-10-20": BASELINE,
     "2026-10-21": BASELINE, "2026-10-22": BASELINE, "2026-10-23": BASELINE,
     "2026-10-24": BASELINE, "2026-10-25": BASELINE, "2026-10-26": BASELINE,
@@ -710,14 +733,16 @@ function caricaPianoGara() {
     "2026-10-30": BASELINE, "2026-10-31": BASELINE,
     "2026-11-01": BASELINE, "2026-11-02": BASELINE, "2026-11-03": BASELINE,
     "2026-11-04": BASELINE, "2026-11-05": BASELINE, "2026-11-06": BASELINE,
-    "2026-11-07": BASELINE, "2026-11-08": BASELINE,
+    "2026-11-07": BASELINE, "2026-11-08": PREPEAK,
     "2026-11-09": DEPL1, "2026-11-10": DEPL2, "2026-11-11": DEPL3,
     "2026-11-12": CARB1, "2026-11-13": CARB2, "2026-11-14": FINALE, "2026-11-15": GARA
   };
 
-  function saveDay(iso, plan) {
-    const t = { meals: plan.meals.map(m => ({ ...m, items: m.items.map(it => it.slice()) })) };
-    if (!plan.noScale) { scaleToObj(t); scaleWaterSalt(t, getObj()); }
+  // riscrive i pasti di un giorno col template della fase, scalati sugli obiettivi DI QUEL giorno
+  function writeDayPlan(iso) {
+    const plan = PLANMAP[iso];
+    const t = { label: plan.label, cls: plan.cls, noScale: plan.noScale, meals: plan.meals.map(m => ({ ...m, items: m.items.map(it => it.slice()) })) };
+    if (!t.noScale) { t.iso = iso; scaleToObj(t); scaleWaterSalt(t, getObj(iso)); }
     for (let mi = 0; mi < 8; mi++) {
       del("mod6_" + iso + "_" + mi);
       del("wm_" + iso + "_" + mi);
@@ -731,14 +756,14 @@ function caricaPianoGara() {
       store("mod6_" + iso + "_" + mi, JSON.stringify({ items: m.items, locks: m.items.map(() => false), base: { kc: v.kc, K: v.K, Mg: v.Mg, Na: v.Na } }));
       if (m.water) store("wm_" + iso + "_" + mi, "0");
     });
+    fbPushDay(iso);
+  }
+  // rigenera (e sincronizza) tutti i giorni da una data in poi: usata per aggiornare il piano secondo il cronoprogramma
+  function regenDallaData(fromIso) {
+    Object.keys(PLANMAP).filter(iso => iso >= fromIso).forEach(writeDayPlan);
+    touch(); renderCal();
   }
 
-  store("obiettivi", JSON.stringify({ kcal: 1750, P: 195, F: 50, water: 4.5, sale: 5.5 }));
-  Object.keys(planMap).forEach(iso => saveDay(iso, planMap[iso]));
-  touch();
-  renderCal();
-  alert("\u2705 Piano caricato! Apri le date sul calendario.");
-}
 
 function impData(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);Object.keys(d).forEach(k=>{if(d[k]!=null)store(k,d[k])});touch();alert("Ripristinato OK");if(cur)openDay(new Date(cur.iso+"T12:00:00"));else renderCal()}catch(e){alert("File non valido")}};r.readAsText(f);inp.value=""}function suppRows(m,mi){let h="",ix=0;
  (m.supp||"").split("·").forEach(t=>{t=t.trim();if(!t)return;const hasIc=/^[^\x00-\x7F]/.test(t);const ic=hasIc?"":(/tisana/i.test(t)?"🍵":(/caff|decaf/i.test(t)?"☕":"💊"));h+=`<tr data-suppitem="${mi},${ix}"><td colspan="5">${ic?ic+" ":""}${t}</td></tr>`;ix++});
