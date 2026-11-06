@@ -74,6 +74,13 @@ input.inv{width:60px}input[type=number]::-webkit-inner-spin-button,input[type=nu
 @media (max-width:700px){body{font-size:14px;padding:8px}h1{font-size:24px !important}table.grid{font-size:12px !important}.grid td,.grid th{padding:4px 5px !important}.meal{padding:8px}.day{min-height:90px}button{padding:8px 10px}#dayhead h2{font-size:24px !important}.wbar div,.sbar div{font-size:11px !important}}
 label{display:block;margin:6px 0;font-size:15px}
 details{margin:6px 0;border:1px solid #444;border-radius:8px;padding:6px}
+@keyframes day-in-right{from{opacity:0;transform:translateX(36px)}to{opacity:1;transform:none}}
+@keyframes day-in-left{from{opacity:0;transform:translateX(-36px)}to{opacity:1;transform:none}}
+@keyframes flip-in-ver-left{-webkit-transform:rotateY(80deg);transform:rotateY(80deg);opacity:0;from{-webkit-transform:rotateY(80deg);transform:rotateY(80deg);opacity:0}to{-webkit-transform:rotateY(0);transform:rotateY(0);opacity:1}}
+@keyframes flip-in-ver-right{-webkit-transform:rotateY(-80deg);transform:rotateY(-80deg);opacity:0;from{-webkit-transform:rotateY(-80deg);transform:rotateY(-80deg);opacity:0}to{-webkit-transform:rotateY(0);transform:rotateY(0);opacity:1}}
+.flip-in-ver-left{-webkit-animation:flip-in-ver-left 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;animation:flip-in-ver-left 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both}
+.flip-in-ver-right{-webkit-animation:flip-in-ver-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;animation:flip-in-ver-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both}
+@keyframes flip-in-ver-left{0%{-webkit-transform:rotateY(80deg);transform:rotateY(80deg);opacity:0}100%{-webkit-transform:rotateY(0);transform:rotateY(0);opacity:1}}@keyframes flip-in-ver-right{0%{-webkit-transform:rotateY(-80deg);transform:rotateY(-80deg);opacity:0}100%{-webkit-transform:rotateY(0);transform:rotateY(0);opacity:1}}.flip-in-ver-left,.flip-in-ver-right{-webkit-animation-duration:0.5s;animation-duration:0.5s;-webkit-animation-fill-mode:both;animation-fill-mode:both;-webkit-animation-timing-function:cubic-bezier(0.250,0.460,0.450,0.940);animation-timing-function:cubic-bezier(0.250,0.460,0.450,0.940);transform-style:preserve-3d;backface-visibility:hidden}.flip-in-ver-left{-webkit-animation-name:flip-in-ver-left;animation-name:flip-in-ver-left}.flip-in-ver-right{-webkit-animation-name:flip-in-ver-right;animation-name:flip-in-ver-right}
 summary{cursor:pointer;font-weight:700}
 .tt td{padding:2px 10px 2px 0}.grid{border-collapse:collapse}.grid td{border:1px solid #555;padding:6px 10px}
 .supp{font-size:12px;color:#9fd8ff}.water{font-size:12px;color:#7ee2a8}
@@ -199,16 +206,21 @@ function applyRotation(t){const off=getOff();if(!off.size)return;
  t.meals.forEach(m=>{m.items=m.items.map(it=>{const[f,q,c]=it;if(!off.has(f))return it;
   const mates=Object.keys(DB).filter(k=>DB[k].g===DB[f].g&&k!==f&&!off.has(k)&&!m.items.some(x=>x[0]===k));
   return mates.length?[mates[0], mates[0]==="olio"?Math.min(q,OLIO_MAX):q, c]:it})})}
-function scaleToObj(t){const o=getObj(t.iso),oc=objCarbs(o);
- for(let pass=0;pass<2;pass++){let Pt=0,Ct=0,Ft=0;
-  t.meals.forEach(m=>m.items.forEach(([f,q])=>{const d=DB[f];if(!d)return;Pt+=d.P*q/100;Ct+=d.C*q/100;Ft+=d.F*q/100}));
+function scaleToObj(t){const o=getObj(t.iso),oc0=objCarbs(o);
+ for(let pass=0;pass<2;pass++){let Pt=0,Ct=0,Ft=0,xC=0;
+  t.meals.forEach(m=>m.items.forEach(([f,q])=>{const d=DB[f];if(!d)return;const cl=foodClass(f);if(cl==="X"){xC+=d.C*q/100;return}Pt+=d.P*q/100;Ct+=d.C*q/100;Ft+=d.F*q/100}));
+  const oc=Math.max(0,oc0-xC); // i cibi fisson (miele/konjac) stanno fuori dallo scaling ma dentro il totale: li scorporo dal bersaglio
   if(Pt<=0||Ct<=0||Ft<=0)break;
   const fp=o.P/Pt,fc=oc/Ct,ff=o.F/Ft;
   t.meals.forEach(m=>m.items.forEach(it=>{const[f,q]=it,cl=foodClass(f);if(cl==="X")return;
-   let nq=q*(cl==="P"?fp:cl==="C"?fc:ff);nq=Math.max(5,nq);if(f==="olio"){if(q<=OLIO_MAX)nq=Math.min(nq,OLIO_MAX);else if(nq>q)nq=q}
+   let nq=f==="olio"?q:Math.max(5,q*(cl==="P"?fp:cl==="C"?fc:ff)); // olio = dosaggio fisso da template (grasso di ODifica, de Moraes 2020)
    it[1]=nq>=20?Math.round(nq/5)*5:Math.round(nq)}))}
  for(let i=0;i<12;i++){const tk=t.meals.reduce((a,m)=>a+m.items.reduce((x,[f,q])=>x+kcal(f,q),0),0);
-  const diff=o.kcal-tk;if(Math.abs(diff)<=50)break;let best=null;
+  const diff=o.kcal-tk;if(Math.abs(diff)<=50)break;
+  if(diff>0){ // il buco kcal (pdf) va prima all'olio, poi al C; cap 13 = template 11 + margine
+   let oi=null;t.meals.forEach(m=>m.items.forEach(it=>{if(it[0]==="olio"&&it[1]<13&&(!oi||it[1]>oi[1]))oi=it}));
+   if(oi){oi[1]=Math.round(oi[1])+1;continue}}
+  let best=null;
   t.meals.forEach(m=>m.items.forEach(it=>{if(foodClass(it[0])!=="C")return;const k=kcal(it[0],it[1]);if(!best||k>best.k)best={it,k}}));
   if(!best)break;best.it[1]=Math.max(20,best.it[1]+(diff>0?10:-10))}}
 function scaleWaterSalt(t,o){
@@ -474,7 +486,7 @@ const start=new Date(2026,9,12),end=new Date(2026,10,15);let cur=null;
 function showCal(){document.getElementById('sheet').style.display='none';document.getElementById('cal').style.display='grid';const hb=document.getElementById('homeBtns');if(hb)hb.style.display='flex'}
 function stepDay(n){const d=new Date(cur.iso+'T12:00:00');d.setDate(d.getDate()+n);
  const d0=new Date(d.getFullYear(),d.getMonth(),d.getDate());
- if(d0<start||d0>end)return;openDay(d)}
+ if(d0<start||d0>end)return;window.__dayAnim=n>0?"flip-in-ver-left":"flip-in-ver-right";openDay(d)}
 function renderCal(){const c=document.getElementById('cal');c.innerHTML="";
  for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){const dd=new Date(d),p=getPlan(dd);
   const t0=new Date();t0.setHours(0,0,0,0);const dd0=new Date(dd);dd0.setHours(0,0,0,0);
@@ -496,10 +508,19 @@ function openDay(d){cur=d;const p=getPlan(d);store("lastDay",p.iso);
   const items=items0.length?items0:JSON.parse(JSON.stringify(m.items));
   const mo={...m,items,target:bt.kc,baseK:bt.K,baseMg:bt.Mg,baseNa:bt.Na,locks:(lm.locks&&lm.locks.length===items.length)?lm.locks:items.map(()=>false),myBase:lm.base||null};autoSupp(mo);return mo});
  distributeNa(p);distributeWater(p);capKDay(p);cur=p;document.getElementById('cal').style.display='none';const hb=document.getElementById('homeBtns');if(hb)hb.style.display='none';fbListenDay(p.iso);setTimeout(()=>{if(cur===p)fbPushDay(p.iso)},1500);
- const s=document.getElementById('sheet');s.style.display='block';
- s.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%"><button onclick="stepDay(-1)">◀</button><div id="dayhead" style="flex:1;text-align:center"></div><button onclick="stepDay(1)">▶</button></div>
- <div class="tabs">${["Dieta","Idratazione","Dati corporei"].map((t,i)=>`<div class="tab${i===0?' on':''}" data-t="${t}">${t}</div>`).join('')}</div><div id="pane"></div>`;
- paintMeta();
+ 
+  const s=document.getElementById('sheet');s.style.display='block';
+  let html=`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%"><button onclick="stepDay(-1)">◀</button><div id="dayhead" style="flex:1;text-align:center"></div><button onclick="stepDay(1)">▶</button></div>`;
+  html+=`<div class="tabs">${["Dieta","Idratazione","Dati corporei"].map((t,i)=>`<div class="tab${i===0?' on':''}" data-t="${t}">${t}</div>`).join('')}</div><div id="pane"></div>`;
+  s.innerHTML=html;
+  if(window.__dayAnim){
+    s.classList.remove('flip-in-ver-left','flip-in-ver-right','day-in-right','day-in-left');
+    void s.offsetWidth;
+    s.classList.add(window.__dayAnim);
+    window.__dayAnim=null;
+  }
+  paintMeta();
+
  s.querySelectorAll('.tab').forEach(t=>t.onclick=()=>tab(t));tab(s.querySelector('.tab'));paintDone()}
 function dayTotals(){let t={C:0,P:0,F:0,Na:0,K:0,Mg:0,H:0,kc:0,w:0};
  cur.meals.forEach(m=>{const v=mealTotals(m);for(const k in v)t[k]+=v[k];t.w+=m.water});for(const k in t)t[k]=Math.round(t[k]*10)/10;return t}
@@ -674,60 +695,56 @@ const Q = {
     M("Pre-nanna", [["quark", Q.quark, "crudo"], ["fragole", Q.fragole, "crudo"]], 200, "")
   ]};
 
-  // ULTIMA FASE 8-15/11: niente latticini (niente greco/quark/whey Bulk → wheyIso)
-  // e niente alimenti ricchi di fibre (niente avena, broccoli, spinaci, carote, fragole, patate dolci)
-  const PREPEAK = { label: "PRE PEAK WEEK", cls: "base", meals: [
+  // ULTIMA FASE 7-15/11 — protocollo competitor (Escalante 2021, Helms 2014, de Moraes 2020):
+  // zero latticini, zero proteine in polvere (proteine intere: pesce/albume/seitan/tofu/salmone),
+  // fibra ridotta (solo zucchine), Pranzo e Cena grandi, Pre-wo dolce e leggero, Pre-nanna dolce.
+  const BASE = { label: "PRE PEAK WEEK", cls: "base", meals: [
     COL,
-    M("Spuntino", [["wheyIso", 40, "crudo"], ["albume", 200, "crudo"], ["olio", 5, "crudo"]], 300, ""),
-    M("Pranzo", [["merluzzo", 300, "vapore"], ["riso", 90, "pentola"], ["zucchine", 250, "padella"], ["olio", 8, "crudo"]], 500, ""),
-    M("Spuntino pre-wo", [["seitan", 130, "piastra"], ["patate", 150, "microonde"], ["banana", 60, "crudo"], ["olio", 6, "crudo"]], 400, ""),
-    M("Cena", [["tofuAff", 150, "piastra"], ["albume", 200, "crudo"], ["zucchine", 250, "padella"], ["olio", 10, "crudo"]], 500, ""),
-    M("Pre-nanna", [["albume", 100, "crudo"]], 200, "")
+    M("Pranzo", [["merluzzo", 350, "vapore"], ["albume", 250, "crudo"], ["riso", 60, "pentola"], ["zucchine", 350, "padella"], ["olio", 11, "crudo"]], 500, ""),
+    M("Spuntino pre-wo", [["banana", 100, "crudo"], ["galRiso", 40, "crudo"], ["miele", 10, "crudo"]], 250, "Dolce · leggero"),
+    M("Cena", [["seitan", 150, "piastra"], ["salmone", 150, "piastra"], ["patate", 150, "microonde"], ["zucchine", 950, "padella"], ["olio", 11, "crudo"]], 500, ""),
+    M("Pre-nanna", [["albume", 350, "crudo"], ["banana", 80, "crudo"], ["miele", 5, "crudo"]], 200, "Dolce")
   ]};
+  const CLEANBASE = { ...BASE, label: "BASELINE" };
   const DEPL1 = { label: "DEPLEZIONE 1", cls: "base", meals: [
     COL,
-    M("Spuntino", [["wheyIso", 40, "crudo"], ["albume", 200, "crudo"], ["olio", 5, "crudo"]], 300, ""),
-    M("Pranzo", [["merluzzo", 300, "vapore"], ["riso", 40, "pentola"], ["zucchine", 500, "padella"], ["olio", 6, "crudo"]], 500, ""),
-    M("Spuntino pre-wo", [["seitan", 130, "piastra"], ["patate", 200, "microonde"], ["banana", 40, "crudo"], ["olio", 4, "crudo"]], 400, ""),
-    M("Cena", [["tofuAff", 120, "piastra"], ["albume", 250, "crudo"], ["zucchine", 400, "padella"], ["olio", 10, "crudo"]], 500, ""),
-    M("Pre-nanna", [["albume", 100, "crudo"]], 200, "")
+    M("Pranzo", [["merluzzo", 350, "vapore"], ["albume", 250, "crudo"], ["riso", 30, "pentola"], ["zucchine", 950, "padella"], ["olio", 11, "crudo"]], 500, ""),
+    M("Spuntino pre-wo", [["banana", 100, "crudo"], ["galRiso", 40, "crudo"], ["miele", 10, "crudo"]], 250, "Dolce · leggero"),
+    M("Cena", [["seitan", 150, "piastra"], ["salmone", 150, "piastra"], ["patate", 150, "microonde"], ["zucchine", 950, "padella"], ["olio", 11, "crudo"]], 500, ""),
+    M("Pre-nanna", [["albume", 350, "crudo"], ["banana", 80, "crudo"], ["miele", 5, "crudo"]], 200, "Dolce")
   ]};
   const DEPL2 = { ...DEPL1, label: "DEPLEZIONE 2" };
   const DEPL3 = { label: "DEPLEZIONE 3", cls: "base", meals: [
     COL,
-    M("Spuntino", [["wheyIso", 40, "crudo"], ["albume", 200, "crudo"], ["olio", 5, "crudo"]], 300, ""),
-    M("Pranzo", [["merluzzo", 300, "vapore"], ["riso", 15, "pentola"], ["zucchine", 500, "padella"], ["olio", 6, "crudo"]], 500, ""),
-    M("Spuntino pre-wo", [["seitan", 130, "piastra"], ["patate", 150, "microonde"], ["banana", 160, "crudo"], ["olio", 4, "crudo"]], 400, ""),
-    M("Cena", [["tofuAff", 120, "piastra"], ["albume", 250, "crudo"], ["zucchine", 500, "padella"], ["olio", 10, "crudo"]], 500, ""),
-    M("Pre-nanna", [["albume", 100, "crudo"]], 200, "")
+    M("Pranzo", [["merluzzo", 350, "vapore"], ["albume", 250, "crudo"], ["riso", 20, "pentola"], ["zucchine", 1300, "padella"], ["olio", 11, "crudo"]], 500, ""),
+    M("Spuntino pre-wo", [["banana", 100, "crudo"], ["galRiso", 40, "crudo"], ["miele", 10, "crudo"]], 250, "Dolce · leggero"),
+    M("Cena", [["seitan", 150, "piastra"], ["salmone", 150, "piastra"], ["patate", 150, "microonde"], ["zucchine", 1150, "padella"], ["olio", 11, "crudo"]], 500, ""),
+    M("Pre-nanna", [["albume", 350, "crudo"], ["banana", 60, "crudo"], ["miele", 5, "crudo"]], 200, "Dolce")
   ]};
   const CARB1 = { label: "CARB-LOAD 1", cls: "base", meals: [
     COL,
-    M("Spuntino", [["wheyIso", 40, "crudo"], ["galRiso", 40, "crudo"], ["soiaDrink", 250, "crudo"], ["miele", 15, "crudo"]], 300, ""),
-    M("Pranzo", [["merluzzo", 150, "vapore"], ["riso", 250, "pentola"], ["zucchine", 150, "padella"], ["olio", 10, "crudo"]], 500, ""),
-    M("Spuntino pre-wo", [["seitan", 100, "piastra"], ["patate", 300, "microonde"], ["olio", 10, "crudo"]], 400, ""),
-    M("Cena", [["salmone", 110, "piastra"], ["riso", 150, "pentola"], ["zucchine", 400, "padella"], ["olio", 10, "crudo"]], 500, ""),
-    M("Pre-nanna", [["banana", 150, "crudo"], ["albume", 100, "crudo"]], 200, "")
+    M("Pranzo", [["merluzzo", 250, "vapore"], ["albume", 150, "crudo"], ["riso", 250, "pentola"], ["zucchine", 200, "padella"], ["olio", 11, "crudo"]], 500, ""),
+    M("Spuntino pre-wo", [["galRiso", 40, "crudo"], ["banana", 100, "crudo"], ["miele", 10, "crudo"]], 250, "Dolce · leggero"),
+    M("Cena", [["salmone", 130, "piastra"], ["seitan", 100, "piastra"], ["patate", 300, "microonde"], ["zucchine", 200, "padella"], ["olio", 11, "crudo"]], 500, ""),
+    M("Pre-nanna", [["albume", 300, "crudo"], ["banana", 100, "crudo"], ["miele", 5, "crudo"]], 200, "Dolce")
   ]};
   const CARB2 = { label: "CARB-LOAD 2", cls: "base", meals: [
     COL,
-    M("Spuntino", [["wheyIso", 40, "crudo"], ["galRiso", 30, "crudo"], ["soiaDrink", 200, "crudo"], ["miele", 10, "crudo"]], 300, ""),
-    M("Pranzo", [["merluzzo", 150, "vapore"], ["riso", 180, "pentola"], ["zucchine", 150, "padella"], ["olio", 10, "crudo"]], 500, ""),
-    M("Spuntino pre-wo", [["seitan", 100, "piastra"], ["patate", 260, "microonde"], ["olio", 10, "crudo"]], 400, ""),
-    M("Cena", [["salmone", 140, "piastra"], ["riso", 110, "pentola"], ["zucchine", 400, "padella"], ["olio", 10, "crudo"]], 500, ""),
-    M("Pre-nanna", [["banana", 80, "crudo"], ["albume", 150, "crudo"]], 200, "")
+    M("Pranzo", [["merluzzo", 250, "vapore"], ["albume", 150, "crudo"], ["riso", 230, "pentola"], ["zucchine", 200, "padella"], ["olio", 11, "crudo"]], 500, ""),
+    M("Spuntino pre-wo", [["galRiso", 40, "crudo"], ["banana", 100, "crudo"], ["miele", 10, "crudo"]], 250, "Dolce · leggero"),
+    M("Cena", [["salmone", 130, "piastra"], ["seitan", 100, "piastra"], ["patate", 250, "microonde"], ["zucchine", 200, "padella"], ["olio", 11, "crudo"]], 500, ""),
+    M("Pre-nanna", [["albume", 300, "crudo"], ["banana", 80, "crudo"], ["miele", 5, "crudo"]], 200, "Dolce")
   ]};
   const FINALE = { label: "FINAL TOUCH", cls: "base", meals: [
     COL,
-    M("Spuntino", [["wheyIso", 30, "crudo"], ["albume", 150, "crudo"], ["olio", 5, "crudo"]], 300, ""),
-    M("Pranzo", [["merluzzo", 200, "vapore"], ["riso", 100, "pentola"], ["zucchine", 200, "padella"], ["olio", 8, "crudo"]], 500, ""),
-    M("Spuntino pre-wo", [["galRiso", 40, "crudo"], ["seitan", 100, "piastra"], ["olio", 5, "crudo"]], 400, ""),
-    M("Cena", [["tofuAff", 120, "piastra"], ["albume", 150, "crudo"], ["zucchine", 250, "padella"], ["olio", 8, "crudo"]], 500, ""),
-    M("Pre-nanna", [["albume", 100, "crudo"], ["banana", 50, "crudo"]], 200, "")
+    M("Pranzo", [["merluzzo", 250, "vapore"], ["albume", 150, "crudo"], ["riso", 180, "pentola"], ["zucchine", 400, "padella"], ["olio", 10, "crudo"]], 500, ""),
+    M("Spuntino pre-wo", [["galRiso", 40, "crudo"], ["banana", 100, "crudo"], ["miele", 10, "crudo"]], 250, "Dolce · leggero"),
+    M("Cena", [["salmone", 130, "piastra"], ["seitan", 100, "piastra"], ["patate", 200, "microonde"], ["zucchine", 300, "padella"], ["olio", 11, "crudo"]], 500, ""),
+    M("Pre-nanna", [["albume", 300, "crudo"], ["banana", 80, "crudo"], ["miele", 5, "crudo"]], 200, "Dolce")
   ]};
   const GARA = { label: "GARA", cls: "base", noScale: true, meals: [
     COL,
-    M("Spuntino", [["wheyIso", 20, "crudo"], ["albume", 150, "crudo"]], 100, "Solo liquidi pre-palco"),
+    M("Spuntino", [["albume", 150, "crudo"], ["banana", 100, "crudo"], ["miele", 10, "crudo"]], 100, "Solo liquidi pre-palco · dolce"),
     M("Pranzo", [["riso", 80, "pentola"], ["banana", 100, "crudo"], ["miele", 10, "crudo"]], 200, "Carbo rapidi pre-palco"),
     M("Spuntino pre-wo", [], 0, "Solo sorsate acqua"),
     M("Cena", [], 0, "Post-gara: libera"),
@@ -742,7 +759,7 @@ const Q = {
     "2026-10-30": BASELINE, "2026-10-31": BASELINE,
     "2026-11-01": BASELINE, "2026-11-02": BASELINE, "2026-11-03": BASELINE,
     "2026-11-04": BASELINE, "2026-11-05": BASELINE, "2026-11-06": BASELINE,
-    "2026-11-07": BASELINE, "2026-11-08": PREPEAK,
+    "2026-11-07": CLEANBASE, "2026-11-08": BASE,
     "2026-11-09": DEPL1, "2026-11-10": DEPL2, "2026-11-11": DEPL3,
     "2026-11-12": CARB1, "2026-11-13": CARB2, "2026-11-14": FINALE, "2026-11-15": GARA
   };
