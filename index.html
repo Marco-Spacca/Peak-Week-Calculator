@@ -674,56 +674,65 @@ const Q = {
     M("Pre-nanna", [["quark", Q.quark, "crudo"], ["fragole", Q.fragole, "crudo"]], 200, "")
   ]};
 
+  // ULTIMA FASE 8-15/11: niente latticini (niente greco/quark/whey Bulk → wheyIso)
+  // e niente alimenti ricchi di fibre (niente avena, broccoli, spinaci, carote, fragole, patate dolci)
+  const PREPEAK = { label: "PRE PEAK WEEK", cls: "base", meals: [
+    COL,
+    M("Spuntino", [["wheyIso", 40, "crudo"], ["albume", 200, "crudo"], ["olio", 5, "crudo"]], 300, ""),
+    M("Pranzo", [["merluzzo", 300, "vapore"], ["riso", 90, "pentola"], ["zucchine", 250, "padella"], ["olio", 8, "crudo"]], 500, ""),
+    M("Spuntino pre-wo", [["seitan", 130, "piastra"], ["patate", 150, "microonde"], ["banana", 60, "crudo"], ["olio", 6, "crudo"]], 400, ""),
+    M("Cena", [["tofuAff", 150, "piastra"], ["albume", 200, "crudo"], ["zucchine", 250, "padella"], ["olio", 10, "crudo"]], 500, ""),
+    M("Pre-nanna", [["albume", 100, "crudo"]], 200, "")
+  ]};
   const DEPL1 = { label: "DEPLEZIONE 1", cls: "base", meals: [
     COL,
-    M("Spuntino", [["wheyIso", Q.wheyIso, "crudo"], ["greco", Q.greco, "crudo"], ["albume", Q.albume, "crudo"], ["olio", 5, "crudo"]], 300, ""),
-    M("Pranzo", [["merluzzo", Q.merluzzo, "vapore"], ["riso", 50, "pentola"], ["zucchine", 250, "padella"], ["olio", 10, "crudo"]], 500, ""),
-    M("Spuntino pre-wo", [["seitan", Q.seitan, "piastra"], ["patDolci", 50, "microonde"], ["broccoli", 200, "padella"], ["olio", 5, "crudo"]], 400, ""),
-    M("Cena", [["tofuAff", Q.tofuAff, "piastra"], ["spinaci", 250, "padella"], ["olio", 10, "crudo"]], 500, ""),
-    M("Pre-nanna", [["quark", 150, "crudo"], ["fragole", 50, "crudo"]], 200, "")
+    M("Spuntino", [["wheyIso", 40, "crudo"], ["albume", 200, "crudo"], ["olio", 5, "crudo"]], 300, ""),
+    M("Pranzo", [["merluzzo", 300, "vapore"], ["riso", 40, "pentola"], ["zucchine", 500, "padella"], ["olio", 6, "crudo"]], 500, ""),
+    M("Spuntino pre-wo", [["seitan", 130, "piastra"], ["patate", 200, "microonde"], ["banana", 40, "crudo"], ["olio", 4, "crudo"]], 400, ""),
+    M("Cena", [["tofuAff", 120, "piastra"], ["albume", 250, "crudo"], ["zucchine", 400, "padella"], ["olio", 10, "crudo"]], 500, ""),
+    M("Pre-nanna", [["albume", 100, "crudo"]], 200, "")
   ]};
   const DEPL2 = { ...DEPL1, label: "DEPLEZIONE 2" };
   const DEPL3 = { label: "DEPLEZIONE 3", cls: "base", meals: [
     COL,
-    M("Spuntino", [["wheyIso", Q.wheyIso, "crudo"], ["greco", Q.greco, "crudo"], ["albume", Q.albume, "crudo"], ["olio", 5, "crudo"]], 300, ""),
-    M("Pranzo", [["merluzzo", Q.merluzzo, "vapore"], ["riso", 40, "pentola"], ["zucchine", 250, "padella"], ["olio", 8, "crudo"]], 500, ""),
-    M("Spuntino pre-wo", [["seitan", Q.seitan, "piastra"], ["patDolci", 40, "microonde"], ["broccoli", 200, "padella"], ["olio", 5, "crudo"]], 400, ""),
-    M("Cena", [["tofuAff", Q.tofuAff, "piastra"], ["spinaci", 250, "padella"], ["olio", 8, "crudo"]], 500, ""),
-    M("Pre-nanna", [["quark", 150, "crudo"], ["fragole", 50, "crudo"]], 200, "")
+    M("Spuntino", [["wheyIso", 40, "crudo"], ["albume", 200, "crudo"], ["olio", 5, "crudo"]], 300, ""),
+    M("Pranzo", [["merluzzo", 300, "vapore"], ["riso", 15, "pentola"], ["zucchine", 500, "padella"], ["olio", 6, "crudo"]], 500, ""),
+    M("Spuntino pre-wo", [["seitan", 130, "piastra"], ["patate", 150, "microonde"], ["banana", 160, "crudo"], ["olio", 4, "crudo"]], 400, ""),
+    M("Cena", [["tofuAff", 120, "piastra"], ["albume", 250, "crudo"], ["zucchine", 500, "padella"], ["olio", 10, "crudo"]], 500, ""),
+    M("Pre-nanna", [["albume", 100, "crudo"]], 200, "")
   ]};
   const CARB1 = { label: "CARB-LOAD 1", cls: "base", meals: [
     COL,
-    M("Spuntino", [["whey", 30, "crudo"], ["avena", 60, "pentola"], ["soiaDrink", 250, "crudo"], ["miele", 15, "crudo"]], 300, ""),
-    M("Pranzo", [["merluzzo", 150, "vapore"], ["riso", 250, "pentola"], ["zucchine", 150, "padella"], ["olio", 5, "crudo"]], 500, ""),
-    M("Spuntino pre-wo", [["seitan", 100, "piastra"], ["patate", 250, "microonde"], ["olio", 5, "crudo"]], 400, ""),
-    M("Cena", [["salmone", 100, "piastra"], ["riso", 150, "pentola"], ["carote", 150, "padella"], ["olio", 5, "crudo"]], 500, ""),
-    M("Pre-nanna", [["banana", 150, "crudo"], ["greco", 150, "crudo"]], 200, "")
+    M("Spuntino", [["wheyIso", 40, "crudo"], ["galRiso", 40, "crudo"], ["soiaDrink", 250, "crudo"], ["miele", 15, "crudo"]], 300, ""),
+    M("Pranzo", [["merluzzo", 150, "vapore"], ["riso", 250, "pentola"], ["zucchine", 150, "padella"], ["olio", 10, "crudo"]], 500, ""),
+    M("Spuntino pre-wo", [["seitan", 100, "piastra"], ["patate", 300, "microonde"], ["olio", 10, "crudo"]], 400, ""),
+    M("Cena", [["salmone", 110, "piastra"], ["riso", 150, "pentola"], ["zucchine", 400, "padella"], ["olio", 10, "crudo"]], 500, ""),
+    M("Pre-nanna", [["banana", 150, "crudo"], ["albume", 100, "crudo"]], 200, "")
   ]};
   const CARB2 = { label: "CARB-LOAD 2", cls: "base", meals: [
     COL,
-    M("Spuntino", [["whey", 30, "crudo"], ["avena", 50, "pentola"], ["soiaDrink", 200, "crudo"], ["miele", 10, "crudo"]], 300, ""),
-    M("Pranzo", [["merluzzo", 150, "vapore"], ["riso", 180, "pentola"], ["zucchine", 150, "padella"], ["olio", 5, "crudo"]], 500, ""),
-    M("Spuntino pre-wo", [["seitan", 100, "piastra"], ["patate", 200, "microonde"], ["olio", 5, "crudo"]], 400, ""),
-    M("Cena", [["salmone", 100, "piastra"], ["riso", 120, "pentola"], ["carote", 150, "padella"], ["olio", 5, "crudo"]], 500, ""),
-    M("Pre-nanna", [["banana", 120, "crudo"], ["greco", 120, "crudo"]], 200, "")
+    M("Spuntino", [["wheyIso", 40, "crudo"], ["galRiso", 30, "crudo"], ["soiaDrink", 200, "crudo"], ["miele", 10, "crudo"]], 300, ""),
+    M("Pranzo", [["merluzzo", 150, "vapore"], ["riso", 180, "pentola"], ["zucchine", 150, "padella"], ["olio", 10, "crudo"]], 500, ""),
+    M("Spuntino pre-wo", [["seitan", 100, "piastra"], ["patate", 260, "microonde"], ["olio", 10, "crudo"]], 400, ""),
+    M("Cena", [["salmone", 140, "piastra"], ["riso", 110, "pentola"], ["zucchine", 400, "padella"], ["olio", 10, "crudo"]], 500, ""),
+    M("Pre-nanna", [["banana", 80, "crudo"], ["albume", 150, "crudo"]], 200, "")
   ]};
   const FINALE = { label: "FINAL TOUCH", cls: "base", meals: [
     COL,
-    M("Spuntino", [["wheyIso", 30, "crudo"], ["greco", 150, "crudo"], ["albume", 100, "crudo"], ["olio", 5, "crudo"]], 300, ""),
+    M("Spuntino", [["wheyIso", 30, "crudo"], ["albume", 150, "crudo"], ["olio", 5, "crudo"]], 300, ""),
     M("Pranzo", [["merluzzo", 200, "vapore"], ["riso", 100, "pentola"], ["zucchine", 200, "padella"], ["olio", 8, "crudo"]], 500, ""),
     M("Spuntino pre-wo", [["galRiso", 40, "crudo"], ["seitan", 100, "piastra"], ["olio", 5, "crudo"]], 400, ""),
-    M("Cena", [["tofuAff", 120, "piastra"], ["spinaci", 200, "padella"], ["olio", 8, "crudo"]], 500, ""),
-    M("Pre-nanna", [["quark", 100, "crudo"], ["fragole", 80, "crudo"]], 200, "")
+    M("Cena", [["tofuAff", 120, "piastra"], ["albume", 150, "crudo"], ["zucchine", 250, "padella"], ["olio", 8, "crudo"]], 500, ""),
+    M("Pre-nanna", [["albume", 100, "crudo"], ["banana", 50, "crudo"]], 200, "")
   ]};
   const GARA = { label: "GARA", cls: "base", noScale: true, meals: [
     COL,
-    M("Spuntino", [["wheyIso", 20, "crudo"], ["greco", 100, "crudo"]], 100, "Solo liquidi pre-palco"),
+    M("Spuntino", [["wheyIso", 20, "crudo"], ["albume", 150, "crudo"]], 100, "Solo liquidi pre-palco"),
     M("Pranzo", [["riso", 80, "pentola"], ["banana", 100, "crudo"], ["miele", 10, "crudo"]], 200, "Carbo rapidi pre-palco"),
     M("Spuntino pre-wo", [], 0, "Solo sorsate acqua"),
     M("Cena", [], 0, "Post-gara: libera"),
     M("Pre-nanna", [], 0, "")
   ]};
-  const PREPEAK = { ...BASELINE, label: "PRE PEAK WEEK" };
 
   const PLANMAP = {
     "2026-10-18": BASELINE, "2026-10-19": BASELINE, "2026-10-20": BASELINE,
